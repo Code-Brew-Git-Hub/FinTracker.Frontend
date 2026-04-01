@@ -43,7 +43,7 @@ Frontend часть сервиса **FinTracker** — интерфейс для 
 FinTracker.Frontend/
 │── index.html
 │── style.css
-│── script.js (если появится)
+│── script.js
 │── img/
 │   ├── logo.png
 │   └── wallet.png
