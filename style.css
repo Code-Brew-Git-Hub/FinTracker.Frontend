@@ -32,21 +32,27 @@ body {
 
 /* NAV */
 
-.nav a {
+.nav-link {
     margin-left: 40px;
     text-decoration: none;
     font-size: 20px;
     color: #7fa1c3;
     font-weight: 700;
-    transition: 0.2s;
+    transition: 0.3s;
+    padding: 6px 12px;
+    border-radius: 6px;
 }
 
-.nav a:first-child {
+/* hover */
+.nav-link:hover {
+    background-color: rgba(47, 79, 111, 0.15);
     color: #2f4f6f;
 }
 
-.nav a:hover {
-    opacity: 0.7;
+/* active */
+.nav-link.active {
+    background-color: rgba(47, 79, 111, 0.25);
+    color: #2f4f6f;
 }
 
 /* HERO */
@@ -57,8 +63,6 @@ body {
     align-items: center;
     padding: 80px 100px;
 }
-
-/* TEXT */
 
 .hero-text {
     max-width: 520px;
@@ -81,7 +85,7 @@ body {
 
 /* BUTTON */
 
-.hero-text button {
+.start-btn {
     background: #8fc5a4;
     border: none;
     padding: 18px 55px;
@@ -90,6 +94,18 @@ body {
     color: #2f4f6f;
     cursor: pointer;
     box-shadow: 8px 8px 0 #7bb394;
+    transition: 0.2s;
+}
+
+/* hover */
+.start-btn:hover {
+    filter: brightness(0.9);
+}
+
+/* click effect */
+.start-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 4px 4px 0 #7bb394;
 }
 
 /* IMAGE */
