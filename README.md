@@ -51,17 +51,6 @@ FinTracker.Frontend/
 
 ---
 
-## ⚙️ Запуск проекта
-
-```bash
-git clone https://github.com/ТВОЙ-USERNAME/FinTracker.Frontend.git
-cd FinTracker.Frontend
-```
-
-Открыть `index.html` в браузере
-
----
-
 ## 🔗 Связанные репозитории
 
 * Backend: [https://github.com/ТВОЙ-USERNAME/FinTracker.Backend](https://github.com/Code-Brew-Git-Hub/FinTracker.Backend)
