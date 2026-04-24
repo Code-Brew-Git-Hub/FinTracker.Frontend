@@ -2,50 +2,71 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinTracker</title>
 
-    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Шрифт -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
+<header class="header">
+    <div class="container header-inner">
 
-    <header class="header">
         <div class="logo">
-            <img src="img/logo.png" alt="FinTracker">
+            <img src="img/fintracker_logo_header.png" class="logo-img">
+            <span>FinTracker</span>
         </div>
 
-        <nav class="nav">
-            <a href="#" class="nav-link active">Главная</a>
-            <a href="#" class="nav-link">Загрузить</a>
-            <a href="#" class="nav-link">О нас</a>
-            <a href="#" class="nav-link">Профиль</a>
-        </nav>
-    </header>
+        <div class="right-menu">
+            <nav class="nav">
+                <a class="active">Главная</a>
+                <a>Транзакции</a>
+                <a>Аналитика</a>
+                <a>Проверка</a>
+            </nav>
 
-    <section class="hero">
-        <div class="hero-text">
-            <h1>Хотите<br>разобраться<br>с тратами?</h1>
+            <button class="btn">Загрузить</button>
+        </div>
 
-            <p>
-                It is a long established fact that a reader will be distracted
-                by the readable content of a page when looking at its layout.
+    </div>
+</header>
+
+<section class="hero">
+    <div class="container hero-inner">
+
+        <!-- LEFT -->
+        <div class="left">
+            <h1>
+                Хотите<br>
+                разобраться<br>
+                с тратами?
+            </h1>
+
+            <p class="subtext">
+                It is a long established fact that a<br>
+                reader will be distracted by
             </p>
 
-            <button class="start-btn">Начать</button>
+            <button class="btn big">Загрузить выписку</button>
+
+            <ul class="list">
+                <li>Связывайте транзакции</li>
+                <li>Исключайте переводы из аналитики</li>
+                <li>Создавайте категории</li>
+            </ul>
         </div>
 
-        <div class="hero-image">
-            <img src="img/wallet.png" alt="wallet">
+        <!-- RIGHT (схема картинкой) -->
+        <div class="right">
+            <img src="img/scheme.png" class="scheme" alt="Схема">
         </div>
-    </section>
 
-</div>
+    </div>
+</section>
 
 <script src="script.js"></script>
-
 </body>
 </html>
