@@ -1,0 +1,617 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTracker — Загрузка</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="upload.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+
+        <div class="logo">
+            <img src="img/fintracker_logo_header.png" class="logo-img">
+            <span>FinTracker</span>
+        </div>
+
+        <div class="right-menu">
+            <nav class="nav">
+                <a class="go-home">Главная</a>
+                <a class="active">Транзакции</a>
+                <a>Аналитика</a>
+                <a>О нас</a>
+            </nav>
+
+            <button class="btn">Загрузить</button>
+        </div>
+
+    </div>
+</header>
+
+<section class="upload-page">
+    <div class="container upload-inner">
+
+        <!-- LEFT -->
+        <div class="upload-left">
+
+            <h1>
+                Загрузка<br>
+                транзакций
+            </h1>
+
+            <p>
+                Одна точка входа для импорта,<br>
+                ручного ввода и регулярных операций
+            </p>
+
+            <!-- tabs -->
+            <div class="switcher">
+                <button class="switch-btn active">
+                    <img src="img/import.png">
+                    Импорт
+                </button>
+
+                <button class="switch-btn">
+                    <img src="img/pencil.png">
+                    Вручную
+                </button>
+            </div>
+
+            <!-- upload block -->
+            <div class="upload-box">
+
+                <div class="dropzone">
+                    <img src="img/download.png">
+
+                    <h3>
+                        Перетащите CSV или выберите файл
+                    </h3>
+
+                    <span>
+                        Поддержка: CSV, выписки банков, экспорт из Excel
+                    </span>
+                </div>
+
+                <button class="choose-btn">
+                    Выбрать файл
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="upload-right">
+
+            <div class="preview-card">
+
+                <h2>Предпросмотр импорта</h2>
+
+                <p class="preview-subtitle">
+                    Сопоставление колонок, проверка качества и результат до записи в систему
+                </p>
+
+                <!-- stats -->
+                <div class="stats">
+
+                    <div class="stat-item">
+                        <img src="img/calendar.png">
+                        <h4>Период</h4>
+                        <span>12.03.27 –<br>29.06.27</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/cvitantion.png">
+                        <h4>Транзакции</h4>
+                        <span class="blue">12</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/dohody.png">
+                        <h4>Доходы</h4>
+                        <span class="green">9</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/rashody.png">
+                        <h4>Расходы</h4>
+                        <span class="orange">227</span>
+                    </div>
+
+                </div>
+
+                <!-- categories -->
+                <div class="categories">
+
+                    <h3>Найденные категории</h3>
+
+                    <div class="category-tags">
+                        <div class="tag blue-tag">Подписки × 3</div>
+                        <div class="tag orange-tag">Переводы × 12</div>
+                        <div class="break"></div>
+                        <div class="tag green-tag">Переводы между счетами</div>
+                        <div class="tag gray-tag">Цели × 5</div>
+                    </div>
+
+                </div>
+
+                <!-- table -->
+                <div class="table-wrap">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Описание</th>
+                                <th>Сумма</th>
+                                <th>Категория</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>02.04.2026</td>
+                                <td>Перевод между счетами</td>
+                                <td>+10 000 ₽</td>
+                                <td><span class="table-tag green-tag">Переводы</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>03.04.2026</td>
+                                <td>Коммуналка</td>
+                                <td>-600 ₽</td>
+                                <td><span class="table-tag orange-tag">Дубль</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>05.04.2026</td>
+                                <td>Монитор</td>
+                                <td>-20 000 ₽</td>
+                                <td><span class="table-tag gray-tag">Техника</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>06.04.2026</td>
+                                <td>Цветы</td>
+                                <td>-3 000 ₽</td>
+                                <td><span class="table-tag blue-tag">Цветы</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <!-- actions -->
+                <div class="actions">
+                    <button class="cancel-btn">Отмена</button>
+                    <button class="import-btn">Импортировать</button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<script src="upload.js"></script>
+</body>
+=======
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTracker — Загрузка</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="upload.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+
+        <div class="logo">
+            <img src="img/fintracker_logo_header.png" class="logo-img">
+            <span>FinTracker</span>
+        </div>
+
+        <div class="right-menu">
+            <nav class="nav">
+                <a>Главная</a>
+                <a class="active">Транзакции</a>
+                <a>Аналитика</a>
+                <a>О нас</a>
+            </nav>
+
+            <button class="btn">Загрузить</button>
+        </div>
+
+    </div>
+</header>
+
+<section class="upload-page">
+    <div class="container upload-inner">
+
+        <!-- LEFT -->
+        <div class="upload-left">
+
+            <h1>
+                Загрузка<br>
+                транзакций
+            </h1>
+
+            <p>
+                Одна точка входа для импорта,<br>
+                ручного ввода и регулярных операций
+            </p>
+
+            <!-- tabs -->
+            <div class="switcher">
+                <button class="switch-btn active">
+                    <img src="img/import.png">
+                    Импорт
+                </button>
+
+                <button class="switch-btn">
+                    <img src="img/pencil.png">
+                    Вручную
+                </button>
+            </div>
+
+            <!-- upload block -->
+            <div class="upload-box">
+
+                <div class="dropzone">
+                    <img src="img/download.png">
+
+                    <h3>
+                        Перетащите CSV или выберите файл
+                    </h3>
+
+                    <span>
+                        Поддержка: CSV, выписки банков, экспорт из Excel
+                    </span>
+                </div>
+
+                <button class="choose-btn">
+                    Выбрать файл
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="upload-right">
+
+            <div class="preview-card">
+
+                <h2>Предпросмотр импорта</h2>
+
+                <p class="preview-subtitle">
+                    Сопоставление колонок, проверка качества и результат до записи в систему
+                </p>
+
+                <!-- stats -->
+                <div class="stats">
+
+                    <div class="stat-item">
+                        <img src="img/calendar.png">
+                        <h4>Период</h4>
+                        <span>12.03.27 –<br>29.06.27</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/cvitantion.png">
+                        <h4>Транзакции</h4>
+                        <span class="blue">12</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/dohody.png">
+                        <h4>Доходы</h4>
+                        <span class="green">9</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/rashody.png">
+                        <h4>Расходы</h4>
+                        <span class="orange">227</span>
+                    </div>
+
+                </div>
+
+                <!-- categories -->
+                <div class="categories">
+
+                    <h3>Найденные категории</h3>
+
+                    <div class="category-tags">
+                        <div class="tag blue-tag">Подписки × 3</div>
+                        <div class="tag orange-tag">Переводы × 12</div>
+                        <div class="break"></div>
+                        <div class="tag green-tag">Переводы между счетами</div>
+                        <div class="tag gray-tag">Цели × 5</div>
+                    </div>
+
+                </div>
+
+                <!-- table -->
+                <div class="table-wrap">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Описание</th>
+                                <th>Сумма</th>
+                                <th>Категория</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>02.04.2026</td>
+                                <td>Перевод между счетами</td>
+                                <td>+10 000 ₽</td>
+                                <td><span class="table-tag green-tag">Переводы</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>03.04.2026</td>
+                                <td>Коммуналка</td>
+                                <td>-600 ₽</td>
+                                <td><span class="table-tag orange-tag">Дубль</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>05.04.2026</td>
+                                <td>Монитор</td>
+                                <td>-20 000 ₽</td>
+                                <td><span class="table-tag gray-tag">Техника</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>06.04.2026</td>
+                                <td>Цветы</td>
+                                <td>-3 000 ₽</td>
+                                <td><span class="table-tag blue-tag">Цветы</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <!-- actions -->
+                <div class="actions">
+                    <button class="cancel-btn">Отмена</button>
+                    <button class="import-btn">Импортировать</button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<script src="upload.js"></script>
+</body>
+>>>>>>> b171436541a1ae5f86f0e15ef7486c2c3582935f
+</html>
+=======
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTracker — Загрузка</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="upload.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+
+        <div class="logo">
+            <img src="img/fintracker_logo_header.png" class="logo-img">
+            <span>FinTracker</span>
+        </div>
+
+        <div class="right-menu">
+            <nav class="nav">
+                <a class="go-home">Главная</a>
+                <a class="active">Транзакции</a>
+                <a>Аналитика</a>
+                <a>О нас</a>
+            </nav>
+
+            <button class="btn">Загрузить</button>
+        </div>
+
+    </div>
+</header>
+
+<section class="upload-page">
+    <div class="container upload-inner">
+
+        <!-- LEFT -->
+        <div class="upload-left">
+
+            <h1>
+                Загрузка<br>
+                транзакций
+            </h1>
+
+            <p>
+                Одна точка входа для импорта,<br>
+                ручного ввода и регулярных операций
+            </p>
+
+            <!-- tabs -->
+            <div class="switcher">
+                <button class="switch-btn active">
+                    <img src="img/import.png">
+                    Импорт
+                </button>
+
+                <button class="switch-btn">
+                    <img src="img/pencil.png">
+                    Вручную
+                </button>
+            </div>
+
+            <!-- upload block -->
+            <div class="upload-box">
+
+                <div class="dropzone">
+                    <img src="img/download.png">
+
+                    <h3>
+                        Перетащите CSV или выберите файл
+                    </h3>
+
+                    <span>
+                        Поддержка: CSV, выписки банков, экспорт из Excel
+                    </span>
+                </div>
+
+                <button class="choose-btn">
+                    Выбрать файл
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="upload-right">
+
+            <div class="preview-card">
+
+                <h2>Предпросмотр импорта</h2>
+
+                <p class="preview-subtitle">
+                    Сопоставление колонок, проверка качества и результат до записи в систему
+                </p>
+
+                <!-- stats -->
+                <div class="stats">
+
+                    <div class="stat-item">
+                        <img src="img/calendar.png">
+                        <h4>Период</h4>
+                        <span>12.03.27 –<br>29.06.27</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/cvitantion.png">
+                        <h4>Транзакции</h4>
+                        <span class="blue">12</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/dohody.png">
+                        <h4>Доходы</h4>
+                        <span class="green">9</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <img src="img/rashody.png">
+                        <h4>Расходы</h4>
+                        <span class="orange">227</span>
+                    </div>
+
+                </div>
+
+                <!-- categories -->
+                <div class="categories">
+
+                    <h3>Найденные категории</h3>
+
+                    <div class="category-tags">
+                        <div class="tag blue-tag">Подписки × 3</div>
+                        <div class="tag orange-tag">Переводы × 12</div>
+                        <div class="break"></div>
+                        <div class="tag green-tag">Переводы между счетами</div>
+                        <div class="tag gray-tag">Цели × 5</div>
+                    </div>
+
+                </div>
+
+                <!-- table -->
+                <div class="table-wrap">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Описание</th>
+                                <th>Сумма</th>
+                                <th>Категория</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>02.04.2026</td>
+                                <td>Перевод между счетами</td>
+                                <td>+10 000 ₽</td>
+                                <td><span class="table-tag green-tag">Переводы</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>03.04.2026</td>
+                                <td>Коммуналка</td>
+                                <td>-600 ₽</td>
+                                <td><span class="table-tag orange-tag">Дубль</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>05.04.2026</td>
+                                <td>Монитор</td>
+                                <td>-20 000 ₽</td>
+                                <td><span class="table-tag gray-tag">Техника</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>06.04.2026</td>
+                                <td>Цветы</td>
+                                <td>-3 000 ₽</td>
+                                <td><span class="table-tag blue-tag">Цветы</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <!-- actions -->
+                <div class="actions">
+                    <button class="cancel-btn">Отмена</button>
+                    <button class="import-btn">Импортировать</button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<script src="upload.js"></script>
+</body>
+</html>
+>>>>>>> b2f09bad7dfa3eb933fdae4d935860bd3723f31b
