@@ -49,7 +49,6 @@
                 ручного ввода и регулярных операций
             </p>
 
-            <!-- tabs -->
             <div class="switcher">
 
                 <button class="switch-btn active">
@@ -64,7 +63,6 @@
 
             </div>
 
-            <!-- upload block -->
             <div class="upload-box">
 
                 <div class="dropzone">
@@ -84,6 +82,8 @@
                 <button class="choose-btn">
                     Выбрать файл
                 </button>
+
+                <input type="file" id="fileInput" accept=".csv" hidden>
 
             </div>
 
@@ -106,25 +106,37 @@
                     <div class="stat-item">
                         <img src="img/calendar.png">
                         <h4>Период</h4>
-                        <span>12.03.27 –<br>29.06.27</span>
+
+                        <span class="period-text">
+                            12.03.27 –<br>29.06.27
+                        </span>
                     </div>
 
                     <div class="stat-item">
                         <img src="img/cvitantion.png" class="transaction-icon">
                         <h4>Транзакции</h4>
-                        <span class="blue">12</span>
+
+                        <span class="blue transactions-count">
+                            12
+                        </span>
                     </div>
 
                     <div class="stat-item">
                         <img src="img/dohody.png">
                         <h4>Доходы</h4>
-                        <span class="green">9</span>
+
+                        <span class="green income-count">
+                            9
+                        </span>
                     </div>
 
                     <div class="stat-item">
                         <img src="img/rashody.png">
                         <h4>Расходы</h4>
-                        <span class="orange">227</span>
+
+                        <span class="orange expense-count">
+                            227
+                        </span>
                     </div>
 
                 </div>
