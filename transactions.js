@@ -19,16 +19,34 @@ const pagesList = document.querySelector("#pagesList");
 const changeCategoryBtn = document.querySelector("#changeCategoryBtn");
 const addScopeBtn = document.querySelector("#addScopeBtn");
 const deleteBtn = document.querySelector("#deleteBtn");
+const moreBtn = document.querySelector("#moreBtn");
 
 const dateFilterBtn = document.querySelector(".date-filter");
 const filterBtn = document.querySelector(".filter-btn");
-const settingsBtn = document.querySelector(".settings-btn");
+const settingsBtn = document.querySelector("#settingsBtn");
 const pageSizeBtn = document.querySelector(".page-size");
+
+const settingsModal = document.querySelector("#settingsModal");
+const settingsCloseBtn = document.querySelector("#settingsCloseBtn");
+const settingsTabs = document.querySelectorAll(".settings-tab");
+const settingsList = document.querySelector("#settingsList");
+const settingsCreateForm = document.querySelector("#settingsCreateForm");
+const settingsCreateInput = document.querySelector("#settingsCreateInput");
+const settingsHint = document.querySelector("#settingsHint");
+const settingsError = document.querySelector("#settingsError");
+
+const selectModal = document.querySelector("#selectModal");
+const selectModalTitle = document.querySelector("#selectModalTitle");
+const selectModalSelect = document.querySelector("#selectModalSelect");
+const selectCloseBtn = document.querySelector("#selectCloseBtn");
+const selectCancelBtn = document.querySelector("#selectCancelBtn");
+const selectApplyBtn = document.querySelector("#selectApplyBtn");
 
 let transactions = [];
 let filteredTransactions = [];
 let categories = [];
 let scopes = [];
+let tags = [];
 
 let currentPage = 1;
 let pageSize = 25;
@@ -36,24 +54,55 @@ let pageSize = 25;
 let dateFrom = null;
 let dateTo = null;
 
+let activeSettingsTab = "categories";
+let currentSelectAction = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadCategories();
-    await loadScopes();
+    await loadReferences();
     await loadTransactions();
     bindEvents();
 });
 
-async function loadTransactions() {
-    try {
-        const response = await fetch(`${API_URL}/transactions`);
-        const data = await response.json();
+/*
+    =========================
+    API
+    =========================
+*/
 
-        if (!data.success) {
-            alert(data.error || "Ошибка загрузки транзакций");
-            return;
+async function apiRequest(path, options = {}) {
+    const response = await fetch(`${API_URL}${path}`, options);
+
+    if (!response.ok && response.status !== 204) {
+        let errorText = `HTTP ${response.status}`;
+
+        try {
+            const errorData = await response.json();
+            errorText = errorData.error || errorText;
+        } catch {
+            errorText = await response.text();
         }
 
-        transactions = data.data || [];
+        throw new Error(errorText);
+    }
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    const data = await response.json();
+
+    if (data && data.success === false) {
+        throw new Error(data.error || "Ошибка API");
+    }
+
+    return data?.data ?? data;
+}
+
+async function loadTransactions() {
+    try {
+        const data = await apiRequest("/transactions");
+
+        transactions = data || [];
 
         transactions.sort((a, b) => {
             return new Date(b.dateUtc) - new Date(a.dateUtc);
@@ -67,23 +116,18 @@ async function loadTransactions() {
     }
 }
 
+async function loadReferences() {
+    await Promise.all([
+        loadCategories(),
+        loadScopes(),
+        loadTags()
+    ]);
+}
+
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_URL}/categories`);
-        const data = await response.json();
-
-        if (!data.success) {
-            return;
-        }
-
-        categories = data.data || [];
-
-        categories.forEach(category => {
-            const option = document.createElement("option");
-            option.value = category.id;
-            option.textContent = category.name;
-            categoryFilter.appendChild(option);
-        });
+        categories = await apiRequest("/categories") || [];
+        renderCategoryFilter();
 
     } catch (error) {
         console.error(error);
@@ -92,26 +136,72 @@ async function loadCategories() {
 
 async function loadScopes() {
     try {
-        const response = await fetch(`${API_URL}/scopes`);
-        const data = await response.json();
-
-        if (!data.success) {
-            return;
-        }
-
-        scopes = data.data || [];
-
-        scopes.forEach(scope => {
-            const option = document.createElement("option");
-            option.value = scope.id;
-            option.textContent = scope.name;
-            scopeFilter.appendChild(option);
-        });
+        scopes = await apiRequest("/scopes") || [];
+        renderScopeFilter();
 
     } catch (error) {
         console.error(error);
     }
 }
+
+async function loadTags() {
+    try {
+        tags = await apiRequest("/tags") || [];
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function createReference(type, name) {
+    const path = getReferencePath(type);
+
+    await apiRequest(path, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name })
+    });
+}
+
+async function updateReference(type, id, name) {
+    const path = getReferencePath(type);
+
+    await apiRequest(`${path}/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name })
+    });
+}
+
+async function deleteReference(type, id) {
+    const path = getReferencePath(type);
+
+    await apiRequest(`${path}/${id}`, {
+        method: "DELETE"
+    });
+}
+
+function getReferencePath(type) {
+    if (type === "categories") {
+        return "/categories";
+    }
+
+    if (type === "scopes") {
+        return "/scopes";
+    }
+
+    return "/tags";
+}
+
+/*
+    =========================
+    СОБЫТИЯ
+    =========================
+*/
 
 function bindEvents() {
     searchInput.addEventListener("input", applyFilters);
@@ -124,9 +214,13 @@ function bindEvents() {
     prevPageBtn.addEventListener("click", previousPage);
     nextPageBtn.addEventListener("click", nextPage);
 
-    changeCategoryBtn.addEventListener("click", changeCategory);
-    addScopeBtn.addEventListener("click", addScope);
+    changeCategoryBtn.addEventListener("click", openCategorySelect);
+    addScopeBtn.addEventListener("click", openScopeSelect);
     deleteBtn.addEventListener("click", deleteTransactions);
+
+    if (moreBtn) {
+        moreBtn.addEventListener("click", openMoreActions);
+    }
 
     if (dateFilterBtn) {
         dateFilterBtn.addEventListener("click", changeDatePeriod);
@@ -136,16 +230,70 @@ function bindEvents() {
         filterBtn.addEventListener("click", resetFilters);
     }
 
-    if (settingsBtn) {
-        settingsBtn.addEventListener("click", () => {
-            alert("Настройка колонок пока не реализована");
-        });
-    }
-
     if (pageSizeBtn) {
         pageSizeBtn.addEventListener("click", changePageSize);
     }
+
+    if (settingsBtn) {
+        settingsBtn.addEventListener("click", openSettingsModal);
+    }
+
+    if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener("click", closeSettingsModal);
+    }
+
+    if (settingsModal) {
+        settingsModal.addEventListener("click", event => {
+            if (event.target === settingsModal) {
+                closeSettingsModal();
+            }
+        });
+    }
+
+    settingsTabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            activeSettingsTab = tab.dataset.tab;
+
+            settingsTabs.forEach(item => {
+                item.classList.remove("active");
+            });
+
+            tab.classList.add("active");
+
+            renderSettingsModal();
+        });
+    });
+
+    if (settingsCreateForm) {
+        settingsCreateForm.addEventListener("submit", createReferenceFromModal);
+    }
+
+    if (selectCloseBtn) {
+        selectCloseBtn.addEventListener("click", closeSelectModal);
+    }
+
+    if (selectCancelBtn) {
+        selectCancelBtn.addEventListener("click", closeSelectModal);
+    }
+
+    if (selectApplyBtn) {
+        selectApplyBtn.addEventListener("click", applySelectAction);
+    }
+
+    if (selectModal) {
+        selectModal.addEventListener("click", event => {
+            if (event.target === selectModal) {
+                closeSelectModal();
+            }
+        });
+    }
 }
+
+/*
+    =========================
+    ФИЛЬТРЫ
+    =========================
+*/
 
 function applyFilters() {
     const searchText = searchInput.value.trim().toLowerCase();
@@ -203,6 +351,69 @@ function applyFilters() {
     renderTable();
 }
 
+function resetFilters() {
+    searchInput.value = "";
+    categoryFilter.value = "";
+    scopeFilter.value = "";
+    typeFilter.value = "";
+    dateFrom = null;
+    dateTo = null;
+
+    const span = dateFilterBtn?.querySelector("span");
+
+    if (span) {
+        span.textContent = "Все даты";
+    }
+
+    applyFilters();
+}
+
+/*
+    =========================
+    РЕНДЕР СПРАВОЧНИКОВ
+    =========================
+*/
+
+function renderCategoryFilter() {
+    const currentValue = categoryFilter.value;
+
+    categoryFilter.innerHTML = `
+        <option value="">Все категории</option>
+    `;
+
+    categories.forEach(category => {
+        const option = document.createElement("option");
+        option.value = category.id;
+        option.textContent = category.name;
+        categoryFilter.appendChild(option);
+    });
+
+    categoryFilter.value = currentValue;
+}
+
+function renderScopeFilter() {
+    const currentValue = scopeFilter.value;
+
+    scopeFilter.innerHTML = `
+        <option value="">Все группы</option>
+    `;
+
+    scopes.forEach(scope => {
+        const option = document.createElement("option");
+        option.value = scope.id;
+        option.textContent = scope.name;
+        scopeFilter.appendChild(option);
+    });
+
+    scopeFilter.value = currentValue;
+}
+
+/*
+    =========================
+    РЕНДЕР ТАБЛИЦЫ
+    =========================
+*/
+
 function renderTable() {
     transactionsCount.textContent = filteredTransactions.length;
     tableBody.innerHTML = "";
@@ -247,9 +458,9 @@ function renderTable() {
                 year: "numeric"
             });
 
-        const tags = transaction.tags?.length
+        const tagsHtml = transaction.tags?.length
             ? transaction.tags
-                .map(tag => `<span class="tag-item">${tag.name}</span>`)
+                .map(tag => `<span class="tag-item">${escapeHtml(tag.name)}</span>`)
                 .join("")
             : "—";
 
@@ -265,11 +476,11 @@ function renderTable() {
 
                 <td>${formattedDate}</td>
 
-                <td>${transaction.description || "—"}</td>
+                <td>${escapeHtml(transaction.description || "—")}</td>
 
                 <td>
                     <span class="category-tag">
-                        ${transaction.category?.name || "—"}
+                        ${escapeHtml(transaction.category?.name || "—")}
                     </span>
                 </td>
 
@@ -277,16 +488,16 @@ function renderTable() {
                     ${amountText}
                 </td>
 
-                <td>${tags}</td>
+                <td>${tagsHtml}</td>
 
                 <td>
                     <span class="scope-tag">
-                        ${transaction.scope?.name || "—"}
+                        ${escapeHtml(transaction.scope?.name || "—")}
                     </span>
                 </td>
 
                 <td class="comment-cell">
-                    ${transaction.comment || "—"}
+                    ${escapeHtml(transaction.comment || "—")}
                 </td>
             </tr>
         `;
@@ -302,6 +513,12 @@ function renderTable() {
 
     updatePagination();
 }
+
+/*
+    =========================
+    ПАГИНАЦИЯ
+    =========================
+*/
 
 function updatePagination() {
     const totalItems = filteredTransactions.length;
@@ -404,6 +621,40 @@ function nextPage() {
     }
 }
 
+function changePageSize() {
+    const value = prompt(
+        "Сколько транзакций показывать на странице?\nНапример: 10, 25, 50"
+    );
+
+    if (!value) {
+        return;
+    }
+
+    const number = Number(value);
+
+    if (!number || number <= 0) {
+        alert("Введите нормальное число");
+        return;
+    }
+
+    pageSize = number;
+    currentPage = 1;
+
+    const pageSizeText = pageSizeBtn?.querySelector("b");
+
+    if (pageSizeText) {
+        pageSizeText.textContent = pageSize;
+    }
+
+    renderTable();
+}
+
+/*
+    =========================
+    ВЫБОР
+    =========================
+*/
+
 function toggleAllCheckboxes() {
     const checkboxes = document.querySelectorAll(".transaction-checkbox");
 
@@ -429,7 +680,13 @@ function getSelectedIds() {
     return Array.from(checkboxes).map(checkbox => checkbox.value);
 }
 
-async function changeCategory() {
+/*
+    =========================
+    МАССОВЫЕ ДЕЙСТВИЯ
+    =========================
+*/
+
+function openCategorySelect() {
     const selectedIds = getSelectedIds();
 
     if (selectedIds.length === 0) {
@@ -442,42 +699,15 @@ async function changeCategory() {
         return;
     }
 
-    const categoryText = categories
-        .map((category, index) => `${index + 1}. ${category.name}`)
-        .join("\n");
-
-    const choice = prompt(
-        `Выберите номер категории:\n\n${categoryText}`
-    );
-
-    if (!choice) {
-        return;
-    }
-
-    const index = Number(choice) - 1;
-    const category = categories[index];
-
-    if (!category) {
-        alert("Такой категории нет");
-        return;
-    }
-
-    try {
-        await updateCategory(selectedIds, category.id);
-
-        categoryFilter.value = "";
-
-        await loadTransactions();
-
-        alert("Категория успешно изменена");
-
-    } catch (error) {
-        console.error(error);
-        alert("Ошибка изменения категории");
-    }
+    openSelectModal({
+        title: "Изменить категорию",
+        items: categories,
+        placeholder: "Выберите категорию",
+        action: "category"
+    });
 }
 
-async function addScope() {
+function openScopeSelect() {
     const selectedIds = getSelectedIds();
 
     if (selectedIds.length === 0) {
@@ -486,42 +716,185 @@ async function addScope() {
     }
 
     if (scopes.length === 0) {
-        alert("Группы не загружены");
+        alert("Сначала создайте группу в настройках");
         return;
     }
 
-    const scopeText = scopes
-        .map((scope, index) => `${index + 1}. ${scope.name}`)
-        .join("\n");
+    openSelectModal({
+        title: "Добавить в группу",
+        items: scopes,
+        placeholder: "Выберите группу",
+        action: "scope"
+    });
+}
 
-    const choice = prompt(
-        `Выберите номер группы:\n\n${scopeText}`
-    );
+function openSelectModal({ title, items, placeholder, action }) {
+    currentSelectAction = action;
 
-    if (!choice) {
+    selectModalTitle.textContent = title;
+
+    selectModalSelect.innerHTML = "";
+
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = placeholder;
+    selectModalSelect.appendChild(emptyOption);
+
+    items.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.name;
+        selectModalSelect.appendChild(option);
+    });
+
+    selectModal.hidden = false;
+}
+
+function closeSelectModal() {
+    selectModal.hidden = true;
+    currentSelectAction = null;
+    selectModalSelect.innerHTML = "";
+}
+
+async function applySelectAction() {
+    const selectedIds = getSelectedIds();
+    const selectedValue = selectModalSelect.value;
+
+    if (selectedIds.length === 0) {
+        alert("Выберите транзакции");
+        closeSelectModal();
         return;
     }
 
-    const index = Number(choice) - 1;
-    const scope = scopes[index];
-
-    if (!scope) {
-        alert("Такой группы нет");
+    if (!selectedValue) {
+        alert("Выберите значение");
         return;
     }
 
     try {
-        await updateScope(selectedIds, scope.id);
+        if (currentSelectAction === "category") {
+            await bulkUpdateTransactions({
+                transactionIds: selectedIds,
+                categoryId: selectedValue
+            });
 
-        scopeFilter.value = "";
+            categoryFilter.value = "";
+        }
 
+        if (currentSelectAction === "scope") {
+            await bulkUpdateTransactions({
+                transactionIds: selectedIds,
+                scopeId: selectedValue
+            });
+
+            scopeFilter.value = "";
+        }
+
+        closeSelectModal();
         await loadTransactions();
-
-        alert("Группа успешно изменена");
 
     } catch (error) {
         console.error(error);
-        alert("Ошибка изменения группы");
+        alert("Не удалось применить изменение");
+    }
+}
+
+function openMoreActions() {
+    const selectedIds = getSelectedIds();
+
+    if (selectedIds.length === 0) {
+        alert("Выберите транзакции");
+        return;
+    }
+
+    const action = prompt(
+        "Выберите действие:\n\n1 — Убрать из группы\n2 — Задать комментарий\n3 — Очистить теги"
+    );
+
+    if (!action) {
+        return;
+    }
+
+    if (action === "1") {
+        removeScopeFromTransactions();
+        return;
+    }
+
+    if (action === "2") {
+        setCommentForTransactions();
+        return;
+    }
+
+    if (action === "3") {
+        clearTagsFromTransactions();
+        return;
+    }
+
+    alert("Такого действия нет");
+}
+
+async function removeScopeFromTransactions() {
+    const selectedIds = getSelectedIds();
+
+    if (!confirm(`Убрать из группы выбранные транзакции (${selectedIds.length})?`)) {
+        return;
+    }
+
+    try {
+        await bulkUpdateTransactions({
+            transactionIds: selectedIds,
+            deleteScope: true
+        });
+
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось убрать группу");
+    }
+}
+
+async function setCommentForTransactions() {
+    const selectedIds = getSelectedIds();
+
+    const comment = prompt("Введите комментарий");
+
+    if (comment === null) {
+        return;
+    }
+
+    try {
+        await bulkUpdateTransactions({
+            transactionIds: selectedIds,
+            comment: comment
+        });
+
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось задать комментарий");
+    }
+}
+
+async function clearTagsFromTransactions() {
+    const selectedIds = getSelectedIds();
+
+    if (!confirm(`Очистить теги у выбранных транзакций (${selectedIds.length})?`)) {
+        return;
+    }
+
+    try {
+        await bulkUpdateTransactions({
+            transactionIds: selectedIds,
+            replaceTagIds: []
+        });
+
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось очистить теги");
     }
 }
 
@@ -543,21 +916,12 @@ async function deleteTransactions() {
 
     try {
         for (const id of ids) {
-            const response = await fetch(
-                `${API_URL}/transactions/${id}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`Ошибка удаления транзакции ${id}`);
-            }
+            await apiRequest(`/transactions/${id}`, {
+                method: "DELETE"
+            });
         }
 
         await loadTransactions();
-
-        alert("Транзакции удалены");
 
     } catch (error) {
         console.error(error);
@@ -565,53 +929,254 @@ async function deleteTransactions() {
     }
 }
 
-async function updateCategory(ids, categoryId) {
-    const response = await fetch(
-        `${API_URL}/transactions/bulk`,
-        {
-            method: "PATCH",
+async function bulkUpdateTransactions(dto) {
+    await apiRequest("/transactions/bulk", {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dto)
+    });
+}
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+/*
+    =========================
+    НАСТРОЙКИ
+    =========================
+*/
 
-            body: JSON.stringify({
-                transactionIds: ids,
-                categoryId: categoryId
-            })
+function openSettingsModal() {
+    activeSettingsTab = "categories";
+
+    settingsTabs.forEach(tab => {
+        tab.classList.toggle(
+            "active",
+            tab.dataset.tab === activeSettingsTab
+        );
+    });
+
+    renderSettingsModal();
+
+    settingsModal.hidden = false;
+}
+
+function closeSettingsModal() {
+    settingsModal.hidden = true;
+    settingsCreateInput.value = "";
+    hideSettingsError();
+}
+
+function renderSettingsModal() {
+    hideSettingsError();
+
+    const items = getActiveSettingsItems();
+
+    settingsList.innerHTML = "";
+
+    if (activeSettingsTab === "tags") {
+        settingsHint.hidden = false;
+    } else {
+        settingsHint.hidden = true;
+    }
+
+    settingsCreateInput.value = "";
+    settingsCreateInput.maxLength =
+        activeSettingsTab === "tags" ? 50 : 100;
+
+    settingsCreateInput.placeholder =
+        activeSettingsTab === "categories"
+            ? "Новая категория"
+            : activeSettingsTab === "tags"
+                ? "Новый тег"
+                : "Новая группа";
+
+    if (items.length === 0) {
+        settingsList.innerHTML = `
+            <div class="settings-empty">
+                Пока ничего нет
+            </div>
+        `;
+
+        return;
+    }
+
+    items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "settings-item";
+        row.dataset.id = item.id;
+
+        const canEdit = activeSettingsTab !== "tags";
+
+        row.innerHTML = `
+            <span class="settings-item-name">
+                ${escapeHtml(item.name)}
+            </span>
+
+            <div class="settings-item-actions">
+                ${
+                    canEdit
+                        ? `
+                            <button
+                                type="button"
+                                class="settings-icon-btn edit-reference-btn"
+                                title="Изменить"
+                            >
+                                ✎
+                            </button>
+                        `
+                        : ""
+                }
+
+                <button
+                    type="button"
+                    class="settings-icon-btn delete-reference-btn"
+                    title="Удалить"
+                >
+                    🗑
+                </button>
+            </div>
+        `;
+
+        const editBtn = row.querySelector(".edit-reference-btn");
+        const deleteBtn = row.querySelector(".delete-reference-btn");
+
+        if (editBtn) {
+            editBtn.addEventListener("click", () => {
+                startReferenceEdit(row, item);
+            });
         }
-    );
 
-    if (!response.ok) {
-        const text = await response.text();
-        console.error(text);
-        throw new Error("Не удалось изменить категорию");
+        deleteBtn.addEventListener("click", () => {
+            deleteReferenceFromModal(item);
+        });
+
+        settingsList.appendChild(row);
+    });
+}
+
+function getActiveSettingsItems() {
+    if (activeSettingsTab === "categories") {
+        return categories;
+    }
+
+    if (activeSettingsTab === "scopes") {
+        return scopes;
+    }
+
+    return tags;
+}
+
+async function createReferenceFromModal(event) {
+    event.preventDefault();
+
+    const name = settingsCreateInput.value.trim();
+
+    if (!name) {
+        return;
+    }
+
+    try {
+        await createReference(activeSettingsTab, name);
+        settingsCreateInput.value = "";
+        await refreshReferencesAfterSettingsChange();
+
+    } catch (error) {
+        console.error(error);
+        showSettingsError(error.message || "Не удалось создать элемент");
     }
 }
 
-async function updateScope(ids, scopeId) {
-    const response = await fetch(
-        `${API_URL}/transactions/bulk`,
-        {
-            method: "PATCH",
+function startReferenceEdit(row, item) {
+    row.innerHTML = `
+        <input
+            type="text"
+            class="settings-edit-input"
+            value="${escapeAttribute(item.name)}"
+        >
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+        <div class="settings-item-actions">
+            <button
+                type="button"
+                class="settings-icon-btn save-reference-btn"
+                title="Сохранить"
+            >
+                ✓
+            </button>
 
-            body: JSON.stringify({
-                transactionIds: ids,
-                scopeId: scopeId
-            })
+            <button
+                type="button"
+                class="settings-icon-btn cancel-reference-btn"
+                title="Отмена"
+            >
+                ✕
+            </button>
+        </div>
+    `;
+
+    const input = row.querySelector(".settings-edit-input");
+    const saveBtn = row.querySelector(".save-reference-btn");
+    const cancelBtn = row.querySelector(".cancel-reference-btn");
+
+    input.focus();
+
+    saveBtn.addEventListener("click", async () => {
+        const newName = input.value.trim();
+
+        if (!newName) {
+            return;
         }
-    );
 
-    if (!response.ok) {
-        const text = await response.text();
-        console.error(text);
-        throw new Error("Не удалось назначить группу");
+        try {
+            await updateReference(activeSettingsTab, item.id, newName);
+            await refreshReferencesAfterSettingsChange();
+
+        } catch (error) {
+            console.error(error);
+            showSettingsError(error.message || "Не удалось изменить элемент");
+        }
+    });
+
+    cancelBtn.addEventListener("click", renderSettingsModal);
+}
+
+async function deleteReferenceFromModal(item) {
+    const confirmed = confirm(`Удалить «${item.name}»?`);
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        await deleteReference(activeSettingsTab, item.id);
+        await refreshReferencesAfterSettingsChange();
+
+    } catch (error) {
+        console.error(error);
+        showSettingsError(error.message || "Не удалось удалить элемент");
     }
 }
+
+async function refreshReferencesAfterSettingsChange() {
+    await loadReferences();
+    renderSettingsModal();
+    applyFilters();
+}
+
+function showSettingsError(message) {
+    settingsError.textContent = message;
+    settingsError.hidden = false;
+}
+
+function hideSettingsError() {
+    settingsError.textContent = "";
+    settingsError.hidden = true;
+}
+
+/*
+    =========================
+    ДАТЫ
+    =========================
+*/
 
 function changeDatePeriod() {
     const fromInput = prompt(
@@ -652,51 +1217,6 @@ function changeDatePeriod() {
     applyFilters();
 }
 
-function resetFilters() {
-    searchInput.value = "";
-    categoryFilter.value = "";
-    scopeFilter.value = "";
-    typeFilter.value = "";
-    dateFrom = null;
-    dateTo = null;
-
-    const span = dateFilterBtn?.querySelector("span");
-
-    if (span) {
-        span.textContent = "Все даты";
-    }
-
-    applyFilters();
-}
-
-function changePageSize() {
-    const value = prompt(
-        "Сколько транзакций показывать на странице?\nНапример: 10, 25, 50"
-    );
-
-    if (!value) {
-        return;
-    }
-
-    const number = Number(value);
-
-    if (!number || number <= 0) {
-        alert("Введите нормальное число");
-        return;
-    }
-
-    pageSize = number;
-    currentPage = 1;
-
-    const pageSizeText = pageSizeBtn?.querySelector("b");
-
-    if (pageSizeText) {
-        pageSizeText.textContent = pageSize;
-    }
-
-    renderTable();
-}
-
 function parseRussianDate(value) {
     const parts = value.split(".");
 
@@ -717,9 +1237,28 @@ function parseRussianDate(value) {
     return date;
 }
 
+/*
+    =========================
+    УТИЛИТЫ
+    =========================
+*/
+
 function formatMoney(value) {
     return value.toLocaleString("ru-RU", {
         minimumFractionDigits: value % 1 === 0 ? 0 : 2,
         maximumFractionDigits: 2
     });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function escapeAttribute(value) {
+    return escapeHtml(value).replaceAll("`", "&#096;");
 }

@@ -40,7 +40,7 @@
 
             <button class="date-filter">
                 <img src="img/calendar.png" alt="">
-                <span>01.05.2024 – 31.05.2024</span>
+                <span>Все даты</span>
             </button>
 
             <div class="search-box">
@@ -95,12 +95,12 @@
                 Изменить категорию
             </button>
 
-            <button class="action-btn more-action">
+            <button class="action-btn more-action" id="moreBtn">
                 Еще
                 <span>⌄</span>
             </button>
 
-            <button class="settings-btn">
+            <button class="settings-btn" id="settingsBtn">
                 Настроить
                 <img src="img/configure.png" alt="">
             </button>
@@ -150,7 +150,7 @@
                 <button id="nextPage">›</button>
 
                 <span class="total-info">
-                    <span id="rangeInfo">1–25</span> из <span id="transactionsCount">0</span>
+                    <span id="rangeInfo">0–0</span> из <span id="transactionsCount">0</span>
                 </span>
             </div>
 
@@ -158,6 +158,76 @@
 
     </div>
 </section>
+
+<div class="settings-modal-overlay" id="settingsModal" hidden>
+    <div class="settings-modal">
+
+        <div class="settings-modal-header">
+            <h2>Настройки</h2>
+            <button class="settings-close-btn" id="settingsCloseBtn">×</button>
+        </div>
+
+        <div class="settings-tabs">
+            <button class="settings-tab active" data-tab="categories">
+                Категории
+            </button>
+
+            <button class="settings-tab" data-tab="tags">
+                Теги
+            </button>
+
+            <button class="settings-tab" data-tab="scopes">
+                Группы
+            </button>
+        </div>
+
+        <p class="settings-hint" id="settingsHint" hidden>
+            Теги можно только создавать и удалять — API не поддерживает переименование.
+        </p>
+
+        <div class="settings-error" id="settingsError" hidden></div>
+
+        <div class="settings-list" id="settingsList"></div>
+
+        <form class="settings-create-form" id="settingsCreateForm">
+            <input
+                type="text"
+                class="settings-create-input"
+                id="settingsCreateInput"
+                placeholder="Новая категория"
+                maxlength="100"
+            >
+
+            <button class="settings-create-btn" type="submit">
+                Добавить
+            </button>
+        </form>
+
+    </div>
+</div>
+
+<div class="select-modal-overlay" id="selectModal" hidden>
+    <div class="select-modal">
+
+        <div class="select-modal-header">
+            <h2 id="selectModalTitle">Выбор</h2>
+            <button class="select-close-btn" id="selectCloseBtn">×</button>
+        </div>
+
+        <select id="selectModalSelect" class="select-modal-select"></select>
+
+        <div class="select-modal-actions">
+            <button id="selectCancelBtn" class="select-cancel-btn">
+                Отмена
+            </button>
+
+            <button id="selectApplyBtn" class="select-apply-btn">
+                Применить
+            </button>
+        </div>
+
+    </div>
+</div>
 
 <script src="transactions.js"></script>
 </body>
