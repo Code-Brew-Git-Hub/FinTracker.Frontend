@@ -48,12 +48,12 @@
 
             <div class="switcher">
 
-                <button class="switch-btn active">
+                <button class="switch-btn active" data-mode="import">
                     <img src="img/import.png" alt="">
                     Импорт
                 </button>
 
-                <button class="switch-btn">
+                <button class="switch-btn" data-mode="manual">
                     <img src="img/pencil.png" alt="">
                     Вручную
                 </button>
@@ -62,31 +62,165 @@
 
             <div class="upload-box">
 
-                <div class="dropzone" id="dropzone">
+                <div class="import-panel" id="importPanel">
 
-                    <img src="img/download.png" alt="">
+                    <div class="dropzone" id="dropzone">
 
-                    <h3>
-                        Перетащите CSV или выберите файл
-                    </h3>
+                        <img src="img/download.png" alt="">
 
-                    <span>
-                        Поддержка: CSV, выписки банков, экспорт из Excel
-                    </span>
+                        <h3>
+                            Перетащите CSV или выберите файл
+                        </h3>
+
+                        <span>
+                            Поддержка: CSV, выписки банков, экспорт из Excel
+                        </span>
+
+                    </div>
+
+                    <button class="choose-btn">
+                        Выбрать файл
+                    </button>
+
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept=".csv"
+                        multiple
+                        hidden
+                    >
 
                 </div>
 
-                <button class="choose-btn">
-                    Выбрать файл
-                </button>
+                <form class="manual-panel" id="manualForm" hidden>
 
-                <input
-                    type="file"
-                    id="fileInput"
-                    accept=".csv"
-                    multiple
-                    hidden
-                >
+                    <div class="manual-kind">
+
+                        <button
+                            type="button"
+                            class="manual-kind-btn active expense-kind"
+                            data-kind="expense"
+                        >
+                            Расход
+                        </button>
+
+                        <button
+                            type="button"
+                            class="manual-kind-btn income-kind"
+                            data-kind="income"
+                        >
+                            Доход
+                        </button>
+
+                    </div>
+
+                    <div class="manual-row two-columns">
+
+                        <label class="manual-field">
+                            <span>Сумма</span>
+
+                            <input
+                                type="text"
+                                id="manualAmount"
+                                placeholder="0,00"
+                                inputmode="decimal"
+                            >
+                        </label>
+
+                        <label class="manual-field">
+                            <span>Валюта</span>
+
+                            <select id="manualCurrency">
+                                <option value="RUB">₽ RUB</option>
+                                <option value="USD">$ USD</option>
+                                <option value="EUR">€ EUR</option>
+                            </select>
+                        </label>
+
+                    </div>
+
+                    <label class="manual-field">
+                        <span>Дата</span>
+
+                        <input
+                            type="date"
+                            id="manualDate"
+                        >
+                    </label>
+
+                    <label class="manual-field">
+                        <span>Описание</span>
+
+                        <input
+                            type="text"
+                            id="manualDescription"
+                            placeholder="Например, Burger King"
+                        >
+                    </label>
+
+                    <label class="manual-field">
+                        <span>Категория</span>
+
+                        <select id="manualCategory">
+                            <option value="">Загрузка категорий...</option>
+                        </select>
+
+                        <small class="manual-hint" id="manualCategoryHint" hidden>
+                            Категорий пока нет. Импортируйте выписку или создайте категорию на странице транзакций.
+                        </small>
+                    </label>
+
+                    <label class="manual-field">
+                        <span>Группа</span>
+
+                        <select id="manualScope">
+                            <option value="">Без группы</option>
+                        </select>
+                    </label>
+
+                    <fieldset class="manual-field manual-tags-field">
+                        <legend>Теги</legend>
+
+                        <div class="manual-tags" id="manualTags">
+                            <span class="manual-tags-empty">
+                                Теги пока не загружены
+                            </span>
+                        </div>
+                    </fieldset>
+
+                    <label class="manual-field">
+                        <span>Комментарий</span>
+
+                        <textarea
+                            id="manualComment"
+                            rows="3"
+                            placeholder="Дополнительные заметки"
+                        ></textarea>
+                    </label>
+
+                    <p class="manual-error" id="manualError" hidden></p>
+
+                    <div class="manual-actions">
+
+                        <button
+                            type="button"
+                            class="manual-reset-btn"
+                            id="manualResetBtn"
+                        >
+                            Очистить
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="manual-submit-btn"
+                            id="manualSubmitBtn"
+                        >
+                            Создать транзакцию
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
 
@@ -181,7 +315,7 @@
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody id="previewTableBody">
 
                             <tr>
                                 <td>02.04.2026</td>
@@ -251,6 +385,28 @@
 
     </div>
 </section>
+
+<div class="upload-modal-overlay" id="uploadMessageModal" hidden>
+    <div class="upload-modal">
+
+        <div class="upload-modal-header">
+            <h2 id="uploadMessageTitle">Сообщение</h2>
+
+            <button class="upload-modal-close" id="uploadMessageClose">
+                ×
+            </button>
+        </div>
+
+        <p class="upload-modal-text" id="uploadMessageText"></p>
+
+        <div class="upload-modal-actions">
+            <button class="upload-modal-primary" id="uploadMessageOk">
+                Хорошо
+            </button>
+        </div>
+
+    </div>
+</div>
 
 <script src="upload.js"></script>
 </body>

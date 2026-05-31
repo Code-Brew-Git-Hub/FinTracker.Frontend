@@ -229,6 +229,167 @@
     </div>
 </div>
 
+<div class="tag-modal-overlay" id="tagModal" hidden>
+    <div class="tag-modal">
+
+        <div class="tag-modal-header">
+            <h2 id="tagModalTitle">Выбор тегов</h2>
+            <button class="tag-close-btn" id="tagModalClose">×</button>
+        </div>
+
+        <p class="tag-modal-text" id="tagModalText">
+            Выберите один или несколько тегов.
+        </p>
+
+        <div class="tag-modal-list" id="tagModalList"></div>
+
+        <div class="tag-modal-actions">
+            <button class="tag-cancel-btn" id="tagModalCancel">
+                Отмена
+            </button>
+
+            <button class="tag-apply-btn" id="tagModalApply">
+                Применить
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="app-modal-overlay" id="messageModal" hidden>
+    <div class="app-modal">
+        <div class="app-modal-header">
+            <h2 id="messageModalTitle">Сообщение</h2>
+            <button class="app-modal-close" id="messageModalClose">×</button>
+        </div>
+
+        <p class="app-modal-text" id="messageModalText"></p>
+
+        <div class="app-modal-actions">
+            <button class="app-modal-cancel" id="messageModalCancel" hidden>
+                Отмена
+            </button>
+
+            <button class="app-modal-primary" id="messageModalOk">
+                Хорошо
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="app-modal-overlay" id="inputModal" hidden>
+    <form class="app-modal" id="inputModalForm">
+        <div class="app-modal-header">
+            <h2 id="inputModalTitle">Ввод данных</h2>
+            <button class="app-modal-close" id="inputModalClose" type="button">×</button>
+        </div>
+
+        <p class="app-modal-text" id="inputModalText"></p>
+
+        <input
+            type="text"
+            class="app-modal-input"
+            id="inputModalField"
+        >
+
+        <div class="app-modal-actions">
+            <button class="app-modal-cancel" id="inputModalCancel" type="button">
+                Отмена
+            </button>
+
+            <button class="app-modal-primary" type="submit">
+                Применить
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="app-modal-overlay" id="dateModal" hidden>
+    <form class="app-modal date-modal" id="dateModalForm">
+        <div class="app-modal-header">
+            <h2>Выбор периода</h2>
+            <button class="app-modal-close" id="dateModalClose" type="button">×</button>
+        </div>
+
+        <p class="app-modal-text">
+            Выберите даты, за которые нужно показать транзакции.
+        </p>
+
+        <div class="date-modal-fields">
+            <label>
+                <span>Дата от</span>
+                <input type="date" id="dateFromInput">
+            </label>
+
+            <label>
+                <span>Дата до</span>
+                <input type="date" id="dateToInput">
+            </label>
+        </div>
+
+        <div class="app-modal-actions">
+            <button class="app-modal-cancel" id="dateModalReset" type="button">
+                Все даты
+            </button>
+
+            <button class="app-modal-secondary" id="dateModalCancel" type="button">
+                Отмена
+            </button>
+
+            <button class="app-modal-primary" type="submit">
+                Применить
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="app-modal-overlay" id="actionsModal" hidden>
+    <div class="app-modal actions-modal">
+        <div class="app-modal-header">
+            <h2>Дополнительные действия</h2>
+            <button class="app-modal-close" id="actionsModalClose">×</button>
+        </div>
+
+        <p class="app-modal-text">
+            Выберите действие для отмеченных транзакций.
+        </p>
+
+        <div class="actions-modal-list">
+            <button class="actions-modal-item" data-action="remove-scope">
+                Убрать из группы
+            </button>
+
+            <button class="actions-modal-item" data-action="comment">
+                Задать комментарий
+            </button>
+
+            <button class="actions-modal-item" data-action="clear-comment">
+                Очистить комментарий
+            </button>
+
+            <button class="actions-modal-item" data-action="description">
+                Изменить описание
+            </button>
+
+            <button class="actions-modal-item" data-action="date">
+                Изменить дату
+            </button>
+
+            <button class="actions-modal-item" data-action="add-tags">
+                Добавить теги
+            </button>
+
+            <button class="actions-modal-item" data-action="replace-tags">
+                Заменить теги
+            </button>
+
+            <button class="actions-modal-item" data-action="clear-tags">
+                Очистить теги
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="transactions.js"></script>
 </body>
 </html>
