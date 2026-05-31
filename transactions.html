@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTracker — Транзакции</title>
+
+    <link rel="stylesheet" href="transactions.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+
+        <div class="logo">
+            <img src="img/fintracker_logo_header.png" class="logo-img" alt="FinTracker">
+            <span>FinTracker</span>
+        </div>
+
+        <div class="right-menu">
+            <nav class="nav">
+                <a href="index.html">Главная</a>
+                <a class="active">Транзакции</a>
+                <a>Аналитика</a>
+                <a>О нас</a>
+            </nav>
+
+            <button class="btn" onclick="window.location.href='upload.html'">
+                Загрузить
+            </button>
+        </div>
+
+    </div>
+</header>
+
+<section class="transactions-page">
+    <div class="container transactions-card">
+
+        <div class="top-controls">
+
+            <button class="date-filter">
+                <img src="img/calendar.png" alt="">
+                <span>01.05.2024 – 31.05.2024</span>
+            </button>
+
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Поиск по описанию, тегам, категориям..."
+                >
+                <span class="search-icon">⌕</span>
+            </div>
+
+            <select id="categoryFilter">
+                <option value="">Все категории</option>
+            </select>
+
+            <select id="typeFilter">
+                <option value="">Все типы</option>
+                <option value="Income">Доходы</option>
+                <option value="Expense">Расходы</option>
+            </select>
+
+            <select id="scopeFilter">
+                <option value="">Все группы</option>
+            </select>
+
+            <button class="filter-btn">
+                <img src="img/filter.png" alt="">
+                <span>Фильтры</span>
+            </button>
+
+        </div>
+
+        <div class="action-row">
+
+            <div class="selected-info">
+                <input type="checkbox" id="selectAll">
+                <span>Выбрано <b class="selected-count">0</b></span>
+            </div>
+
+            <button class="action-btn delete-action" id="deleteBtn">
+                <img src="img/delete.png" alt="">
+                Удалить
+            </button>
+
+            <button class="action-btn group-action" id="addScopeBtn">
+                <img src="img/add_to_group.png" alt="">
+                Добавить в группу
+            </button>
+
+            <button class="action-btn category-action" id="changeCategoryBtn">
+                <img src="img/change_category.png" alt="">
+                Изменить категорию
+            </button>
+
+            <button class="action-btn more-action">
+                Еще
+                <span>⌄</span>
+            </button>
+
+            <button class="settings-btn">
+                Настроить
+                <img src="img/configure.png" alt="">
+            </button>
+
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th class="checkbox-col"></th>
+                        <th>Дата</th>
+                        <th>Описание</th>
+                        <th>Категория</th>
+                        <th>Сумма</th>
+                        <th>Теги</th>
+                        <th>Группа</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+
+                <tbody id="transactionsTableBody">
+                    <tr>
+                        <td colspan="8" class="loading-row">
+                            Загрузка транзакций...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="bottom-panel">
+
+            <button class="page-size">
+                <span>Показать по:</span>
+                <b>25</b>
+                <span>⌄</span>
+            </button>
+
+            <div class="pagination">
+                <button id="prevPage">‹</button>
+
+                <div id="pagesList"></div>
+
+                <button id="nextPage">›</button>
+
+                <span class="total-info">
+                    <span id="rangeInfo">1–25</span> из <span id="transactionsCount">0</span>
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<script src="transactions.js"></script>
+</body>
+</html>

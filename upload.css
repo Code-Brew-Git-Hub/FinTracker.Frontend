@@ -1,3 +1,10 @@
+@font-face {
+    font-family: "Roboto Slab";
+    src: url("fonts/RobotoSlab-VariableFont_wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -5,7 +12,7 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: "Roboto Slab", serif;
     background: linear-gradient(to right, #F7FAFF, #EEF4FF);
 }
 
@@ -17,13 +24,15 @@ body {
 /* HEADER */
 
 .header {
-    padding: 20px 0;
+    padding-top: 58px;
 }
 
 .header-inner {
+    height: 68px;
     background: white;
-    border-radius: 32px;
-    padding: 14px 28px;
+    border: 1px solid #D9E5F5;
+    border-radius: 22px;
+    padding: 0 20px 0 10px;
     display: flex;
     align-items: center;
 }
@@ -35,13 +44,14 @@ body {
 
 .logo-img {
     width: 42px;
-    transform: scale(1.2);
-    transform-origin: left center;
+    height: 42px;
+    object-fit: contain;
 }
 
 .logo span {
-    margin-left: 12px;
-    font-size: 30px;
+    margin-left: 8px;
+    font-size: 32px;
+    line-height: 1;
     color: #24446B;
     font-weight: 900;
 }
@@ -50,50 +60,34 @@ body {
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 26px;
+    gap: 20px;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .nav a {
-    position: relative;
-    color: #355273;
+    color: #24446B;
     text-decoration: none;
-    font-size: 18px;
+    font-size: 22px;
+    line-height: 1;
     font-weight: 900;
-    margin: 0 8px;
-    transition: 0.2s ease;
     cursor: pointer;
-}
-
-.nav a:hover {
-    color: #2F80ED;
-}
-
-.nav a::after {
-    content: "";
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 0%;
-    height: 2px;
-    background: #2F80ED;
-    transition: 0.25s;
-}
-
-.nav a:hover::after {
-    width: 100%;
-}
-
-.nav .active {
-    color: #2F80ED;
+    white-space: nowrap;
 }
 
 .btn {
+    border: none;
     background: #2F80ED;
     color: white;
-    border: none;
-    border-radius: 14px;
-    padding: 12px 24px;
-    font-size: 18px;
+    border-radius: 12px;
+    padding: 9px 17px 11px;
+    font-family: "Roboto Slab", serif;
+    font-size: 22px;
+    line-height: 1;
     font-weight: 900;
     cursor: pointer;
     transition: 0.2s ease;
@@ -123,7 +117,6 @@ body {
 }
 
 .upload-left h1 {
-    font-family: 'Roboto Slab', serif;
     font-size: 72px;
     line-height: 1.05;
     color: #204E73;
@@ -132,7 +125,6 @@ body {
 
 .upload-left p {
     margin-top: 28px;
-    font-family: 'Roboto Slab', serif;
     color: #355273;
     font-size: 24px;
     line-height: 1.35;
@@ -164,6 +156,7 @@ body {
     cursor: pointer;
     transition: 0.2s ease;
     flex: 1;
+    font-family: "Roboto Slab", serif;
 }
 
 .switch-btn img {
@@ -228,6 +221,7 @@ body {
     font-weight: 900;
     cursor: pointer;
     transition: 0.2s ease;
+    font-family: "Roboto Slab", serif;
 }
 
 .choose-btn:hover {
@@ -248,7 +242,6 @@ body {
 }
 
 .preview-card h2 {
-    font-family: 'Roboto Slab', serif;
     color: #355273;
     font-size: 30px;
     font-weight: 900;
@@ -437,6 +430,7 @@ td:last-child {
     font-size: 20px;
     font-weight: 900;
     cursor: pointer;
+    font-family: "Roboto Slab", serif;
 }
 
 .import-btn {
@@ -448,4 +442,5 @@ td:last-child {
     font-size: 20px;
     font-weight: 900;
     cursor: pointer;
+    font-family: "Roboto Slab", serif;
 }

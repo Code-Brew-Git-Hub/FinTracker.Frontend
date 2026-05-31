@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinTracker — Загрузка</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="upload.css">
 </head>
 <body>
@@ -15,19 +13,19 @@
     <div class="container header-inner">
 
         <div class="logo">
-            <img src="img/fintracker_logo_header.png" class="logo-img">
+            <img src="img/fintracker_logo_header.png" class="logo-img" alt="FinTracker">
             <span>FinTracker</span>
         </div>
 
         <div class="right-menu">
             <nav class="nav">
                 <a class="go-home">Главная</a>
-                <a class="active">Транзакции</a>
+                <a class="go-transactions">Транзакции</a>
                 <a>Аналитика</a>
                 <a>О нас</a>
             </nav>
 
-            <button class="btn">Загрузить</button>
+            <button class="btn go-upload">Загрузить</button>
         </div>
 
     </div>
@@ -36,7 +34,6 @@
 <section class="upload-page">
     <div class="container upload-inner">
 
-        <!-- LEFT -->
         <div class="upload-left">
 
             <h1>
@@ -52,12 +49,12 @@
             <div class="switcher">
 
                 <button class="switch-btn active">
-                    <img src="img/import.png">
+                    <img src="img/import.png" alt="">
                     Импорт
                 </button>
 
                 <button class="switch-btn">
-                    <img src="img/pencil.png">
+                    <img src="img/pencil.png" alt="">
                     Вручную
                 </button>
 
@@ -65,9 +62,9 @@
 
             <div class="upload-box">
 
-                <div class="dropzone">
+                <div class="dropzone" id="dropzone">
 
-                    <img src="img/download.png">
+                    <img src="img/download.png" alt="">
 
                     <h3>
                         Перетащите CSV или выберите файл
@@ -83,13 +80,18 @@
                     Выбрать файл
                 </button>
 
-                <input type="file" id="fileInput" accept=".csv" hidden>
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept=".csv"
+                    multiple
+                    hidden
+                >
 
             </div>
 
         </div>
 
-        <!-- RIGHT -->
         <div class="upload-right">
 
             <div class="preview-card">
@@ -100,11 +102,10 @@
                     Сопоставление колонок, проверка качества и результат до записи в систему
                 </p>
 
-                <!-- stats -->
                 <div class="stats">
 
                     <div class="stat-item">
-                        <img src="img/calendar.png">
+                        <img src="img/calendar.png" alt="">
                         <h4>Период</h4>
 
                         <span class="period-text">
@@ -113,7 +114,7 @@
                     </div>
 
                     <div class="stat-item">
-                        <img src="img/cvitantion.png" class="transaction-icon">
+                        <img src="img/cvitantion.png" class="transaction-icon" alt="">
                         <h4>Транзакции</h4>
 
                         <span class="blue transactions-count">
@@ -122,7 +123,7 @@
                     </div>
 
                     <div class="stat-item">
-                        <img src="img/dohody.png">
+                        <img src="img/dohody.png" alt="">
                         <h4>Доходы</h4>
 
                         <span class="green income-count">
@@ -131,7 +132,7 @@
                     </div>
 
                     <div class="stat-item">
-                        <img src="img/rashody.png">
+                        <img src="img/rashody.png" alt="">
                         <h4>Расходы</h4>
 
                         <span class="orange expense-count">
@@ -141,7 +142,6 @@
 
                 </div>
 
-                <!-- categories -->
                 <div class="categories">
 
                     <h3>Найденные категории</h3>
@@ -156,8 +156,6 @@
                             Переводы × 12
                         </div>
 
-                        <div class="break"></div>
-
                         <div class="tag green-tag">
                             Переводы между счетами
                         </div>
@@ -170,7 +168,6 @@
 
                 </div>
 
-                <!-- table -->
                 <div class="table-wrap">
 
                     <table>
@@ -236,7 +233,6 @@
 
                 </div>
 
-                <!-- actions -->
                 <div class="actions">
 
                     <button class="cancel-btn">

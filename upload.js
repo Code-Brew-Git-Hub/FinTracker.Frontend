@@ -1,22 +1,38 @@
-const navLinks = document.querySelectorAll('.nav a');
+const navLinks = document.querySelectorAll(".nav a");
 
 navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.forEach(el => el.classList.remove('active'));
-        link.classList.add('active');
+    link.addEventListener("click", () => {
+        navLinks.forEach(el => el.classList.remove("active"));
+        link.classList.add("active");
     });
 });
 
-const homeButton = document.querySelector('.nav a:first-child');
+const homeButton =
+    document.querySelector(".go-home");
 
-homeButton.addEventListener('click', () => {
-    window.location.href = 'index.html';
-});
+const transactionsLink =
+    document.querySelector(".go-transactions");
 
-const chooseBtn = document.querySelector(".choose-btn");
-const fileInput = document.querySelector("#fileInput");
+const uploadHeaderButton =
+    document.querySelector(".go-upload");
 
-const tableBody = document.querySelector("tbody");
+const chooseBtn =
+    document.querySelector(".choose-btn");
+
+const fileInput =
+    document.querySelector("#fileInput");
+
+const dropzone =
+    document.querySelector("#dropzone");
+
+const importButton =
+    document.querySelector(".import-btn");
+
+const cancelButton =
+    document.querySelector(".cancel-btn");
+
+const tableBody =
+    document.querySelector("tbody");
 
 const transactionsCount =
     document.querySelector(".transactions-count");
@@ -33,25 +49,100 @@ const periodText =
 const categoryTags =
     document.querySelector(".category-tags");
 
+/*
+    =========================
+    НАВИГАЦИЯ
+    =========================
+*/
+
+homeButton.addEventListener("click", () => {
+    window.location.href = "index.html";
+});
+
+if (transactionsLink) {
+    transactionsLink.addEventListener("click", () => {
+        const imported =
+            localStorage.getItem("transactionsImported");
+
+        if (imported === "true") {
+            window.location.href = "transactions.html";
+        } else {
+            alert("Сначала импортируйте хотя бы один файл");
+        }
+    });
+}
+
+if (uploadHeaderButton) {
+    uploadHeaderButton.addEventListener("click", () => {
+        window.location.href = "upload.html";
+    });
+}
+
+if (cancelButton) {
+    cancelButton.addEventListener("click", () => {
+        window.location.href = "index.html";
+    });
+}
+
+/*
+    =========================
+    ВЫБОР ФАЙЛА
+    =========================
+*/
+
 chooseBtn.addEventListener("click", () => {
     fileInput.click();
 });
 
-fileInput.addEventListener("change", async () => {
+/*
+    =========================
+    DRAG & DROP
+    =========================
+*/
 
-    const file = fileInput.files[0];
+if (dropzone) {
+    dropzone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        dropzone.style.borderColor = "#2F80ED";
+        dropzone.style.background = "#EDF5FF";
+    });
 
-    console.log(file);
+    dropzone.addEventListener("dragleave", () => {
+        dropzone.style.borderColor = "#B9D4FA";
+        dropzone.style.background = "#F5F9FF";
+    });
 
-    if (!file) {
-        return;
+    dropzone.addEventListener("drop", async (event) => {
+        event.preventDefault();
+
+        dropzone.style.borderColor = "#B9D4FA";
+        dropzone.style.background = "#F5F9FF";
+
+        const files = event.dataTransfer.files;
+
+        if (!files.length) {
+            return;
+        }
+
+        await uploadFiles(files);
+    });
+}
+
+/*
+    =========================
+    ЗАГРУЗКА ФАЙЛОВ
+    =========================
+*/
+
+async function uploadFiles(files) {
+    const formData = new FormData();
+
+    for (const file of files) {
+        console.log(file);
+        formData.append("files", file);
     }
 
-    const formData = new FormData();
-    formData.append("files", file);
-
     try {
-
         const response = await fetch(
             "http://localhost:5009/api/import",
             {
@@ -60,7 +151,8 @@ fileInput.addEventListener("change", async () => {
             }
         );
 
-        const responseData = await response.json();
+        const responseData =
+            await response.json();
 
         console.log("Ответ сервера:", responseData);
 
@@ -69,23 +161,24 @@ fileInput.addEventListener("change", async () => {
             return;
         }
 
-        const importResult = responseData.data[0];
-        console.log(importResult);
+        const imports =
+            responseData.data;
+
+        const importResult =
+            imports[imports.length - 1];
 
         if (!importResult.success) {
             alert(importResult.error);
             return;
         }
 
-        const result = importResult.result;
+        const result =
+            importResult.result;
 
-        console.log(result);
-
-        /*
-            =========================
-            СТАТИСТИКА
-            =========================
-        */
+        localStorage.setItem(
+            "transactionsImported",
+            "true"
+        );
 
         transactionsCount.textContent =
             result.total;
@@ -96,39 +189,21 @@ fileInput.addEventListener("change", async () => {
         expenseCount.textContent =
             result.expenseCount;
 
-        /*
-            =========================
-            ПЕРИОД
-            =========================
-        */
-
         if (result.period) {
+            const from =
+                new Date(result.period.from);
 
-            const from = new Date(result.period.from);
-            const to = new Date(result.period.to);
-
-            const fromText =
-                from.toLocaleDateString("ru-RU");
-
-            const toText =
-                to.toLocaleDateString("ru-RU");
+            const to =
+                new Date(result.period.to);
 
             periodText.innerHTML =
-                `${fromText} –<br>${toText}`;
+                `${from.toLocaleDateString("ru-RU")} –<br>${to.toLocaleDateString("ru-RU")}`;
         }
 
-        /*
-            =========================
-            КАТЕГОРИИ
-            =========================
-        */
-
         if (result.categories?.length > 0) {
-
             categoryTags.innerHTML = "";
 
             result.categories.forEach((category, index) => {
-
                 const colors = [
                     "blue-tag",
                     "orange-tag",
@@ -136,11 +211,8 @@ fileInput.addEventListener("change", async () => {
                     "gray-tag"
                 ];
 
-                const colorClass =
-                    colors[index % colors.length];
-
                 const tag = `
-                    <div class="tag ${colorClass}">
+                    <div class="tag ${colors[index % colors.length]}">
                         ${category.name} × ${category.count}
                     </div>
                 `;
@@ -149,89 +221,56 @@ fileInput.addEventListener("change", async () => {
             });
         }
 
-        /*
-            =========================
-            ТАБЛИЦА
-            =========================
-        */
-
         if (result.preview?.length > 0) {
-
             tableBody.innerHTML = "";
 
-            result.preview.forEach(transaction => {
+            const lastTransactions =
+                result.preview.slice(0, 5);
 
-                console.log(transaction);
-
-                /*
-                    ДАТА
-                */
-
+            lastTransactions.forEach(transaction => {
                 let formattedDate = "—";
 
                 if (transaction.dateUtc) {
-
-                    const date =
-                        new Date(transaction.dateUtc);
-
-                    if (!isNaN(date.getTime())) {
-
-                        formattedDate =
-                            date.toLocaleDateString("ru-RU");
-                    }
+                    formattedDate =
+                        new Date(
+                            transaction.dateUtc
+                        ).toLocaleDateString("ru-RU");
                 }
-
-                /*
-                    СУММА
-                */
 
                 const amount =
                     Number(transaction.amount);
 
                 const formattedAmount =
                     amount > 0
-                        ? `+${amount} ₽`
-                        : `${amount} ₽`;
+                        ? `+${amount.toLocaleString("ru-RU")} ₽`
+                        : `${amount.toLocaleString("ru-RU")} ₽`;
 
-                /*
-                    ЦВЕТ
-                */
-
-                let categoryClass = "gray-tag";
+                let categoryClass =
+                    "gray-tag";
 
                 if (amount > 0) {
-                    categoryClass = "green-tag";
+                    categoryClass =
+                        "green-tag";
                 }
 
                 if (amount < 0) {
-                    categoryClass = "orange-tag";
+                    categoryClass =
+                        "orange-tag";
                 }
-
-                /*
-                    СТРОКА
-                */
 
                 const row = `
                     <tr>
+                        <td>${formattedDate}</td>
 
-                        <td>
-                            ${formattedDate}
-                        </td>
+                        <td>${transaction.description || "Без описания"}</td>
 
-                        <td>
-                            ${transaction.description || "Без описания"}
-                        </td>
-
-                        <td>
-                            ${formattedAmount}
-                        </td>
+                        <td>${formattedAmount}</td>
 
                         <td>
                             <span class="table-tag ${categoryClass}">
                                 ${transaction.category}
                             </span>
                         </td>
-
                     </tr>
                 `;
 
@@ -240,9 +279,45 @@ fileInput.addEventListener("change", async () => {
         }
 
     } catch (error) {
+        console.error(error);
+        alert("Ошибка загрузки файла");
+    }
+}
 
-        console.error("Ошибка:", error);
+/*
+    =========================
+    INPUT FILE
+    =========================
+*/
 
+fileInput.addEventListener("change", async () => {
+    const files =
+        fileInput.files;
+
+    if (!files.length) {
+        return;
     }
 
+    await uploadFiles(files);
+
+    fileInput.value = "";
 });
+
+/*
+    =========================
+    КНОПКА ИМПОРТА
+    =========================
+*/
+
+if (importButton) {
+    importButton.addEventListener("click", () => {
+        const imported =
+            localStorage.getItem("transactionsImported");
+
+        if (imported === "true") {
+            window.location.href = "transactions.html";
+        } else {
+            alert("Сначала загрузите файл");
+        }
+    });
+}
