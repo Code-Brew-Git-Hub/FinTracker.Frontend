@@ -1,0 +1,57 @@
+# Copy to FinTracker.Frontend: .github/workflows/sync-to-monorepo.yml
+#
+# Secret (Settings → Secrets → Actions): MONOREPO_SYNC_TOKEN
+#   Classic PAT with repo scope, access to Code-Brew-Git-Hub/FinTracker
+
+name: Sync to monorepo
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  MONOREPO_REPOSITORY: Code-Brew-Git-Hub/FinTracker
+  MONOREPO_BRANCH: "Lenyas's-final-version"
+  MONOREPO_SUBPATH: FinTracker.Frontend
+
+jobs:
+  sync:
+    name: Push to FinTracker.Frontend
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.MONOREPO_REPOSITORY }}
+          token: ${{ secrets.MONOREPO_SYNC_TOKEN }}
+          ref: ${{ env.MONOREPO_BRANCH }}
+          path: monorepo
+
+      - name: Copy into monorepo folder
+        run: |
+          rsync -av --delete \
+            --exclude '.git/' \
+            --exclude '.github/workflows/sync-to-monorepo.yml' \
+            --exclude 'node_modules/' \
+            --exclude 'dist/' \
+            --exclude 'dist-ssr/' \
+            --exclude '.env' \
+            ./ "monorepo/${MONOREPO_SUBPATH}/"
+
+      - name: Commit and push
+        working-directory: monorepo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${MONOREPO_SUBPATH}"
+          if git diff --staged --quiet; then
+            echo "Monorepo already up to date."
+            exit 0
+          fi
+          git commit -m "chore: sync ${{ env.MONOREPO_SUBPATH }} from ${{ github.repository }}@${{ github.sha }}"
+          git push
