@@ -42,6 +42,10 @@ body {
     align-items: center;
 }
 
+.logo {
+    cursor: pointer;
+}
+
 .logo-img {
     width: 42px;
     height: 42px;
