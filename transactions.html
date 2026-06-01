@@ -66,9 +66,10 @@
                 <option value="">Все группы</option>
             </select>
 
-            <button class="filter-btn">
+            <button class="filter-btn" id="filtersBtn">
                 <img src="img/filter.png" alt="">
                 <span>Фильтры</span>
+                <b class="filter-counter" id="filterCounter" hidden>0</b>
             </button>
 
         </div>
@@ -120,12 +121,13 @@
                         <th>Теги</th>
                         <th>Группа</th>
                         <th>Комментарий</th>
+                        <th class="row-actions-col"></th>
                     </tr>
                 </thead>
 
                 <tbody id="transactionsTableBody">
                     <tr>
-                        <td colspan="8" class="loading-row">
+                        <td colspan="9" class="loading-row">
                             Загрузка транзакций...
                         </td>
                     </tr>
@@ -254,6 +256,151 @@
         </div>
 
     </div>
+</div>
+
+<div class="filters-modal-overlay" id="filtersModal" hidden>
+    <div class="filters-modal">
+
+        <div class="filters-modal-header">
+            <h2>Фильтры</h2>
+            <button class="filters-close-btn" id="filtersCloseBtn">×</button>
+        </div>
+
+        <div class="filters-grid">
+
+            <label class="filters-field">
+                <span>Дата с</span>
+                <input type="date" id="filterDateFrom">
+            </label>
+
+            <label class="filters-field">
+                <span>Дата по</span>
+                <input type="date" id="filterDateTo">
+            </label>
+
+            <label class="filters-field filters-field-wide">
+                <span>Поиск</span>
+                <input
+                    type="text"
+                    id="filterSearch"
+                    placeholder="По описанию, тегам, категориям..."
+                    maxlength="50"
+                >
+            </label>
+
+            <label class="filters-field">
+                <span>Сумма от</span>
+                <input
+                    type="text"
+                    id="filterAmountMin"
+                    inputmode="decimal"
+                    placeholder="0"
+                >
+            </label>
+
+            <label class="filters-field">
+                <span>Сумма до</span>
+                <input
+                    type="text"
+                    id="filterAmountMax"
+                    inputmode="decimal"
+                    placeholder="0"
+                >
+            </label>
+
+            <label class="filters-field">
+                <span>Категория</span>
+                <select id="filterCategory">
+                    <option value="">Все категории</option>
+                </select>
+            </label>
+
+            <label class="filters-field">
+                <span>Тип</span>
+                <select id="filterType">
+                    <option value="">Все типы</option>
+                    <option value="Expense">Расходы</option>
+                    <option value="Income">Доходы</option>
+                </select>
+            </label>
+
+            <label class="filters-field">
+                <span>Группа</span>
+                <select id="filterScope">
+                    <option value="">Все группы</option>
+                </select>
+            </label>
+
+            <label class="filters-checkbox">
+                <input type="checkbox" id="filterWithoutScope">
+                <span>Только без группы</span>
+            </label>
+
+        </div>
+
+        <fieldset class="filters-tags">
+            <legend>Теги</legend>
+
+            <div class="filters-tags-list" id="filterTagsList">
+                <span class="filters-empty">Теги пока не созданы</span>
+            </div>
+        </fieldset>
+
+        <div class="filters-actions">
+            <button class="filters-reset-btn" id="filtersResetBtn">
+                Сбросить
+            </button>
+
+            <button class="filters-apply-btn" id="filtersApplyBtn">
+                Применить
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="row-menu" id="rowMenu" hidden>
+    <button class="row-menu-item" data-row-action="edit">
+        Изменить транзакцию
+    </button>
+
+    <button class="row-menu-item row-menu-danger" data-row-action="delete">
+        Удалить транзакцию
+    </button>
+
+    <div class="row-menu-divider"></div>
+
+    <button class="row-menu-item" data-row-action="category">
+        Изменить категорию
+    </button>
+
+    <button class="row-menu-item" data-row-action="scope">
+        Добавить в группу
+    </button>
+
+    <button class="row-menu-item" data-row-action="remove-scope">
+        Убрать из группы
+    </button>
+
+    <button class="row-menu-item" data-row-action="comment">
+        Задать комментарий
+    </button>
+
+    <button class="row-menu-item" data-row-action="clear-comment">
+        Очистить комментарий
+    </button>
+
+    <button class="row-menu-item" data-row-action="add-tags">
+        Добавить теги
+    </button>
+
+    <button class="row-menu-item" data-row-action="replace-tags">
+        Заменить теги
+    </button>
+
+    <button class="row-menu-item row-menu-danger" data-row-action="clear-tags">
+        Очистить теги
+    </button>
 </div>
 
 <div class="app-modal-overlay" id="messageModal" hidden>

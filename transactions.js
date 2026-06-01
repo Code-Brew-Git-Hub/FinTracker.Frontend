@@ -22,7 +22,8 @@ const deleteBtn = document.querySelector("#deleteBtn");
 const moreBtn = document.querySelector("#moreBtn");
 
 const dateFilterBtn = document.querySelector(".date-filter");
-const filterBtn = document.querySelector(".filter-btn");
+const filterBtn = document.querySelector("#filtersBtn") || document.querySelector(".filter-btn");
+const filterCounter = document.querySelector("#filterCounter");
 const settingsBtn = document.querySelector("#settingsBtn");
 const pageSizeBtn = document.querySelector(".page-size");
 
@@ -49,6 +50,24 @@ const tagModalList = document.querySelector("#tagModalList");
 const tagModalClose = document.querySelector("#tagModalClose");
 const tagModalCancel = document.querySelector("#tagModalCancel");
 const tagModalApply = document.querySelector("#tagModalApply");
+
+const filtersModal = document.querySelector("#filtersModal");
+const filtersCloseBtn = document.querySelector("#filtersCloseBtn");
+const filtersApplyBtn = document.querySelector("#filtersApplyBtn");
+const filtersResetBtn = document.querySelector("#filtersResetBtn");
+
+const filterDateFrom = document.querySelector("#filterDateFrom");
+const filterDateTo = document.querySelector("#filterDateTo");
+const filterSearch = document.querySelector("#filterSearch");
+const filterAmountMin = document.querySelector("#filterAmountMin");
+const filterAmountMax = document.querySelector("#filterAmountMax");
+const filterCategory = document.querySelector("#filterCategory");
+const filterType = document.querySelector("#filterType");
+const filterScope = document.querySelector("#filterScope");
+const filterWithoutScope = document.querySelector("#filterWithoutScope");
+const filterTagsList = document.querySelector("#filterTagsList");
+
+const rowMenu = document.querySelector("#rowMenu");
 
 const messageModal = document.querySelector("#messageModal");
 const messageModalTitle = document.querySelector("#messageModalTitle");
@@ -89,9 +108,15 @@ let pageSize = 25;
 let dateFrom = null;
 let dateTo = null;
 
+let amountMin = "";
+let amountMax = "";
+let selectedTagIds = [];
+let excludeScopes = false;
+
 let activeSettingsTab = "categories";
 let currentSelectAction = null;
 let currentTagAction = null;
+let activeRowTransactionId = null;
 
 let messageModalResolver = null;
 let inputModalResolver = null;
@@ -170,6 +195,8 @@ async function loadReferences() {
         loadScopes(),
         loadTags()
     ]);
+
+    renderAdvancedFiltersReferences();
 }
 
 async function loadCategories() {
@@ -252,10 +279,27 @@ function getReferencePath(type) {
 */
 
 function bindEvents() {
-    searchInput.addEventListener("input", applyFilters);
-    categoryFilter.addEventListener("change", applyFilters);
-    scopeFilter.addEventListener("change", applyFilters);
-    typeFilter.addEventListener("change", applyFilters);
+    searchInput.addEventListener("input", () => {
+        filterSearch.value = searchInput.value;
+        applyFilters();
+    });
+
+    categoryFilter.addEventListener("change", () => {
+        filterCategory.value = categoryFilter.value;
+        applyFilters();
+    });
+
+    scopeFilter.addEventListener("change", () => {
+        filterScope.value = scopeFilter.value;
+        excludeScopes = false;
+        filterWithoutScope.checked = false;
+        applyFilters();
+    });
+
+    typeFilter.addEventListener("change", () => {
+        filterType.value = typeFilter.value;
+        applyFilters();
+    });
 
     selectAllCheckbox.addEventListener("change", toggleAllCheckboxes);
 
@@ -275,7 +319,7 @@ function bindEvents() {
     }
 
     if (filterBtn) {
-        filterBtn.addEventListener("click", resetFilters);
+        filterBtn.addEventListener("click", openFiltersModal);
     }
 
     if (pageSizeBtn) {
@@ -334,6 +378,38 @@ function bindEvents() {
                 closeSelectModal();
             }
         });
+    }
+
+    if (filtersCloseBtn) {
+        filtersCloseBtn.addEventListener("click", closeFiltersModal);
+    }
+
+    if (filtersModal) {
+        filtersModal.addEventListener("click", event => {
+            if (event.target === filtersModal) {
+                closeFiltersModal();
+            }
+        });
+    }
+
+    if (filtersApplyBtn) {
+        filtersApplyBtn.addEventListener("click", applyAdvancedFilters);
+    }
+
+    if (filtersResetBtn) {
+        filtersResetBtn.addEventListener("click", resetFilters);
+    }
+
+    if (filterWithoutScope) {
+        filterWithoutScope.addEventListener("change", () => {
+            filterScope.disabled = filterWithoutScope.checked;
+        });
+    }
+
+    document.addEventListener("click", handleDocumentClick);
+
+    if (rowMenu) {
+        rowMenu.addEventListener("click", handleRowMenuAction);
     }
 
     bindAppModals();
@@ -548,7 +624,7 @@ function closeActionsModal(value) {
     }
 }
 
-function showTagModal({ title, text, action }) {
+function showTagModal({ title, text, action, checkedIds = [] }) {
     currentTagAction = action;
 
     tagModalTitle.textContent = title;
@@ -571,6 +647,7 @@ function showTagModal({ title, text, action }) {
                 <input
                     type="checkbox"
                     value="${tag.id}"
+                    ${checkedIds.includes(tag.id) ? "checked" : ""}
                 >
 
                 <span>
@@ -605,11 +682,75 @@ function closeTagModal(value) {
     =========================
 */
 
+function openFiltersModal() {
+    filterDateFrom.value =
+        dateFrom ? formatDateInputValue(dateFrom) : "";
+
+    filterDateTo.value =
+        dateTo ? formatDateInputValue(dateTo) : "";
+
+    filterSearch.value = searchInput.value;
+    filterAmountMin.value = amountMin;
+    filterAmountMax.value = amountMax;
+    filterCategory.value = categoryFilter.value;
+    filterType.value = typeFilter.value;
+    filterScope.value = scopeFilter.value;
+    filterWithoutScope.checked = excludeScopes;
+    filterScope.disabled = excludeScopes;
+
+    renderFilterTags();
+
+    filtersModal.hidden = false;
+}
+
+function closeFiltersModal() {
+    filtersModal.hidden = true;
+}
+
+function applyAdvancedFilters() {
+    searchInput.value = filterSearch.value.trim();
+    categoryFilter.value = filterCategory.value;
+    typeFilter.value = filterType.value;
+    scopeFilter.value = filterScope.value;
+
+    amountMin = filterAmountMin.value.trim();
+    amountMax = filterAmountMax.value.trim();
+
+    excludeScopes = filterWithoutScope.checked;
+
+    selectedTagIds =
+        Array.from(
+            filterTagsList.querySelectorAll("input:checked")
+        ).map(input => input.value);
+
+    if (filterDateFrom.value) {
+        dateFrom = new Date(filterDateFrom.value);
+    } else {
+        dateFrom = null;
+    }
+
+    if (filterDateTo.value) {
+        dateTo = new Date(filterDateTo.value);
+        dateTo.setHours(23, 59, 59, 999);
+    } else {
+        dateTo = null;
+    }
+
+    updateDateFilterText();
+    updateFilterCounter();
+
+    closeFiltersModal();
+    applyFilters();
+}
+
 function applyFilters() {
     const searchText = searchInput.value.trim().toLowerCase();
     const selectedCategory = categoryFilter.value;
     const selectedScope = scopeFilter.value;
     const selectedType = typeFilter.value;
+
+    const minAmount = parseAmount(amountMin);
+    const maxAmount = parseAmount(amountMax);
 
     filteredTransactions = transactions.filter(transaction => {
         const description = transaction.description || "";
@@ -632,8 +773,10 @@ function applyFilters() {
             transaction.category?.id === selectedCategory;
 
         const matchesScope =
-            !selectedScope ||
-            transaction.scope?.id === selectedScope;
+            excludeScopes
+                ? !transaction.scope
+                : !selectedScope ||
+                  transaction.scope?.id === selectedScope;
 
         const matchesType =
             !selectedType ||
@@ -647,17 +790,39 @@ function applyFilters() {
         const matchesDateTo =
             !dateTo || transactionDate <= dateTo;
 
+        const absoluteAmount =
+            Math.abs(Number(transaction.amount));
+
+        const matchesMinAmount =
+            minAmount === null || absoluteAmount >= minAmount;
+
+        const matchesMaxAmount =
+            maxAmount === null || absoluteAmount <= maxAmount;
+
+        const transactionTagIds =
+            transaction.tags?.map(tag => tag.id) || [];
+
+        const matchesTags =
+            selectedTagIds.length === 0 ||
+            selectedTagIds.every(tagId =>
+                transactionTagIds.includes(tagId)
+            );
+
         return (
             matchesSearch &&
             matchesCategory &&
             matchesScope &&
             matchesType &&
             matchesDateFrom &&
-            matchesDateTo
+            matchesDateTo &&
+            matchesMinAmount &&
+            matchesMaxAmount &&
+            matchesTags
         );
     });
 
     currentPage = 1;
+    updateFilterCounter();
     renderTable();
 }
 
@@ -666,16 +831,160 @@ function resetFilters() {
     categoryFilter.value = "";
     scopeFilter.value = "";
     typeFilter.value = "";
+
+    filterSearch.value = "";
+    filterCategory.value = "";
+    filterType.value = "";
+    filterScope.value = "";
+    filterAmountMin.value = "";
+    filterAmountMax.value = "";
+    filterDateFrom.value = "";
+    filterDateTo.value = "";
+    filterWithoutScope.checked = false;
+    filterScope.disabled = false;
+
     dateFrom = null;
     dateTo = null;
+    amountMin = "";
+    amountMax = "";
+    selectedTagIds = [];
+    excludeScopes = false;
 
+    renderFilterTags();
+    updateDateFilterText();
+    updateFilterCounter();
+
+    closeFiltersModal();
+    applyFilters();
+}
+
+function updateDateFilterText() {
     const span = dateFilterBtn?.querySelector("span");
 
-    if (span) {
-        span.textContent = "Все даты";
+    if (!span) {
+        return;
     }
 
-    applyFilters();
+    if (!dateFrom && !dateTo) {
+        span.textContent = "Все даты";
+        return;
+    }
+
+    if (dateFrom && dateTo) {
+        span.textContent =
+            `${formatShortDate(dateFrom)} – ${formatShortDate(dateTo)}`;
+        return;
+    }
+
+    if (dateFrom) {
+        span.textContent =
+            `С ${formatShortDate(dateFrom)}`;
+        return;
+    }
+
+    span.textContent =
+        `До ${formatShortDate(dateTo)}`;
+}
+
+function countActiveFilters() {
+    let count = 0;
+
+    if (dateFrom || dateTo) count++;
+    if (searchInput.value.trim()) count++;
+    if (categoryFilter.value) count++;
+    if (typeFilter.value) count++;
+    if (scopeFilter.value) count++;
+    if (amountMin.trim() || amountMax.trim()) count++;
+    if (selectedTagIds.length > 0) count++;
+    if (excludeScopes) count++;
+
+    return count;
+}
+
+function updateFilterCounter() {
+    const count = countActiveFilters();
+
+    if (!filterCounter || !filterBtn) {
+        return;
+    }
+
+    if (count === 0) {
+        filterCounter.hidden = true;
+        filterCounter.textContent = "0";
+        filterBtn.classList.remove("active");
+        return;
+    }
+
+    filterCounter.hidden = false;
+    filterCounter.textContent = count;
+    filterBtn.classList.add("active");
+}
+
+function renderAdvancedFiltersReferences() {
+    renderFilterSelect(filterCategory, categories, "Все категории");
+    renderFilterSelect(filterScope, scopes, "Все группы");
+    renderFilterTags();
+}
+
+function renderFilterSelect(select, items, defaultText) {
+    if (!select) {
+        return;
+    }
+
+    const currentValue = select.value;
+
+    select.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = defaultText;
+    select.appendChild(defaultOption);
+
+    items.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+
+    select.value = currentValue;
+}
+
+function renderFilterTags() {
+    if (!filterTagsList) {
+        return;
+    }
+
+    filterTagsList.innerHTML = "";
+
+    if (tags.length === 0) {
+        filterTagsList.innerHTML = `
+            <span class="filters-empty">
+                Теги пока не созданы
+            </span>
+        `;
+
+        return;
+    }
+
+    tags.forEach(tag => {
+        const label = document.createElement("label");
+        label.className = "filters-tag-option";
+
+        label.innerHTML = `
+            <input
+                type="checkbox"
+                value="${tag.id}"
+                ${selectedTagIds.includes(tag.id) ? "checked" : ""}
+            >
+
+            <span>
+                ${escapeHtml(tag.name)}
+            </span>
+        `;
+
+        filterTagsList.appendChild(label);
+    });
 }
 
 /*
@@ -729,11 +1038,12 @@ function renderTable() {
     tableBody.innerHTML = "";
     selectAllCheckbox.checked = false;
     updateSelectedCount();
+    closeRowMenu();
 
     if (filteredTransactions.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="8" class="loading-row">
+                <td colspan="9" class="loading-row">
                     Транзакции не найдены
                 </td>
             </tr>
@@ -809,6 +1119,17 @@ function renderTable() {
                 <td class="comment-cell">
                     ${escapeHtml(transaction.comment || "—")}
                 </td>
+
+                <td class="row-actions-col">
+                    <button
+                        type="button"
+                        class="row-menu-btn"
+                        data-row-menu-id="${transaction.id}"
+                        aria-label="Действия с транзакцией"
+                    >
+                        ⋮
+                    </button>
+                </td>
             </tr>
         `;
 
@@ -821,7 +1142,183 @@ function renderTable() {
         checkbox.addEventListener("change", updateSelectedCount);
     });
 
+    const rowButtons = document.querySelectorAll(".row-menu-btn");
+
+    rowButtons.forEach(button => {
+        button.addEventListener("click", event => {
+            event.stopPropagation();
+            toggleRowMenu(button.dataset.rowMenuId, button);
+        });
+    });
+
     updatePagination();
+}
+
+/*
+    =========================
+    ТРИ ТОЧКИ В СТРОКЕ
+    =========================
+*/
+
+function toggleRowMenu(transactionId, button) {
+    if (!rowMenu) {
+        return;
+    }
+
+    if (
+        activeRowTransactionId === transactionId &&
+        !rowMenu.hidden
+    ) {
+        closeRowMenu();
+        return;
+    }
+
+    activeRowTransactionId = transactionId;
+
+    document.querySelectorAll(".row-menu-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    const rect = button.getBoundingClientRect();
+
+    rowMenu.style.top = `${rect.bottom + 6}px`;
+    rowMenu.style.left = `${Math.max(8, rect.right - 230)}px`;
+
+    const transaction =
+        transactions.find(item => item.id === transactionId);
+
+    updateRowMenuDisabledState(transaction);
+
+    rowMenu.hidden = false;
+}
+
+function closeRowMenu() {
+    if (rowMenu) {
+        rowMenu.hidden = true;
+    }
+
+    activeRowTransactionId = null;
+
+    document.querySelectorAll(".row-menu-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+}
+
+function handleDocumentClick(event) {
+    if (!rowMenu) {
+        return;
+    }
+
+    if (
+        rowMenu.contains(event.target) ||
+        event.target.classList.contains("row-menu-btn")
+    ) {
+        return;
+    }
+
+    closeRowMenu();
+}
+
+function updateRowMenuDisabledState(transaction) {
+    if (!rowMenu || !transaction) {
+        return;
+    }
+
+    const scopeBtn =
+        rowMenu.querySelector('[data-row-action="scope"]');
+
+    const removeScopeBtn =
+        rowMenu.querySelector('[data-row-action="remove-scope"]');
+
+    const addTagsBtn =
+        rowMenu.querySelector('[data-row-action="add-tags"]');
+
+    const replaceTagsBtn =
+        rowMenu.querySelector('[data-row-action="replace-tags"]');
+
+    const clearTagsBtn =
+        rowMenu.querySelector('[data-row-action="clear-tags"]');
+
+    if (scopeBtn) {
+        scopeBtn.disabled = scopes.length === 0;
+    }
+
+    if (removeScopeBtn) {
+        removeScopeBtn.disabled = !transaction.scope;
+    }
+
+    if (addTagsBtn) {
+        addTagsBtn.disabled = tags.length === 0;
+    }
+
+    if (replaceTagsBtn) {
+        replaceTagsBtn.disabled = tags.length === 0;
+    }
+
+    if (clearTagsBtn) {
+        clearTagsBtn.disabled =
+            !transaction.tags || transaction.tags.length === 0;
+    }
+}
+
+async function handleRowMenuAction(event) {
+    const button = event.target.closest(".row-menu-item");
+
+    if (!button || button.disabled || !activeRowTransactionId) {
+        return;
+    }
+
+    const action = button.dataset.rowAction;
+    const transactionId = activeRowTransactionId;
+
+    closeRowMenu();
+
+    if (action === "edit") {
+        await showMessage({
+            title: "Редактирование",
+            message: "Полное редактирование транзакции пока не подключено. Используйте быстрые действия из этого меню."
+        });
+
+        return;
+    }
+
+    if (action === "delete") {
+        await deleteSingleTransaction(transactionId);
+    }
+
+    if (action === "category") {
+        await changeCategoryForIds([transactionId]);
+    }
+
+    if (action === "scope") {
+        await addScopeForIds([transactionId]);
+    }
+
+    if (action === "remove-scope") {
+        await removeScopeForIds([transactionId]);
+    }
+
+    if (action === "comment") {
+        await setCommentForIds([transactionId]);
+    }
+
+    if (action === "clear-comment") {
+        await clearCommentForIds([transactionId]);
+    }
+
+    if (action === "add-tags") {
+        await addTagsForIds([transactionId]);
+    }
+
+    if (action === "replace-tags") {
+        await replaceTagsForIds([transactionId]);
+    }
+
+    if (action === "clear-tags") {
+        await clearTagsForIds([transactionId]);
+    }
 }
 
 /*
@@ -1015,21 +1512,7 @@ async function openCategorySelect() {
         return;
     }
 
-    if (categories.length === 0) {
-        await showMessage({
-            title: "Нет категорий",
-            message: "Категории не загружены"
-        });
-
-        return;
-    }
-
-    openSelectModal({
-        title: "Изменить категорию",
-        items: categories,
-        placeholder: "Выберите категорию",
-        action: "category"
-    });
+    await changeCategoryForIds(selectedIds);
 }
 
 async function openScopeSelect() {
@@ -1044,21 +1527,7 @@ async function openScopeSelect() {
         return;
     }
 
-    if (scopes.length === 0) {
-        await showMessage({
-            title: "Нет групп",
-            message: "Сначала создайте группу в настройках"
-        });
-
-        return;
-    }
-
-    openSelectModal({
-        title: "Добавить в группу",
-        items: scopes,
-        placeholder: "Выберите группу",
-        action: "scope"
-    });
+    await addScopeForIds(selectedIds);
 }
 
 function openSelectModal({ title, items, placeholder, action }) {
@@ -1093,17 +1562,6 @@ async function applySelectAction() {
     const selectedIds = getSelectedIds();
     const selectedValue = selectModalSelect.value;
 
-    if (selectedIds.length === 0) {
-        closeSelectModal();
-
-        await showMessage({
-            title: "Ничего не выбрано",
-            message: "Выберите хотя бы одну транзакцию"
-        });
-
-        return;
-    }
-
     if (!selectedValue) {
         await showMessage({
             title: "Значение не выбрано",
@@ -1121,6 +1579,7 @@ async function applySelectAction() {
             });
 
             categoryFilter.value = "";
+            filterCategory.value = "";
         }
 
         if (currentSelectAction === "scope") {
@@ -1130,6 +1589,7 @@ async function applySelectAction() {
             });
 
             scopeFilter.value = "";
+            filterScope.value = "";
         }
 
         closeSelectModal();
@@ -1160,33 +1620,156 @@ async function openMoreActions() {
     const action = await showActionsModal();
 
     if (action === "remove-scope") {
-        await removeScopeFromTransactions();
+        await removeScopeForIds(selectedIds);
     }
 
     if (action === "comment") {
-        await setCommentForTransactions();
+        await setCommentForIds(selectedIds);
     }
 
     if (action === "clear-comment") {
-        await clearCommentFromTransactions();
+        await clearCommentForIds(selectedIds);
     }
 
     if (action === "add-tags") {
-        await addTagsToTransactions();
+        await addTagsForIds(selectedIds);
     }
 
     if (action === "replace-tags") {
-        await replaceTagsForTransactions();
+        await replaceTagsForIds(selectedIds);
     }
 
     if (action === "clear-tags") {
-        await clearTagsFromTransactions();
+        await clearTagsForIds(selectedIds);
     }
 }
 
-async function addTagsToTransactions() {
-    const selectedIds = getSelectedIds();
+async function changeCategoryForIds(ids) {
+    if (categories.length === 0) {
+        await showMessage({
+            title: "Нет категорий",
+            message: "Категории не загружены"
+        });
 
+        return;
+    }
+
+    const categoryId = await chooseReference({
+        title: "Изменить категорию",
+        items: categories,
+        placeholder: "Выберите категорию"
+    });
+
+    if (!categoryId) {
+        return;
+    }
+
+    try {
+        await bulkUpdateTransactions({
+            transactionIds: ids,
+            categoryId
+        });
+
+        categoryFilter.value = "";
+        filterCategory.value = "";
+
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+
+        await showMessage({
+            title: "Ошибка",
+            message: "Не удалось изменить категорию"
+        });
+    }
+}
+
+async function addScopeForIds(ids) {
+    if (scopes.length === 0) {
+        await showMessage({
+            title: "Нет групп",
+            message: "Сначала создайте группу в настройках"
+        });
+
+        return;
+    }
+
+    const scopeId = await chooseReference({
+        title: "Добавить в группу",
+        items: scopes,
+        placeholder: "Выберите группу"
+    });
+
+    if (!scopeId) {
+        return;
+    }
+
+    try {
+        await bulkUpdateTransactions({
+            transactionIds: ids,
+            scopeId
+        });
+
+        scopeFilter.value = "";
+        filterScope.value = "";
+
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+
+        await showMessage({
+            title: "Ошибка",
+            message: "Не удалось назначить группу"
+        });
+    }
+}
+
+function chooseReference({ title, items, placeholder }) {
+    return new Promise(resolve => {
+        selectModalTitle.textContent = title;
+        selectModalSelect.innerHTML = "";
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = placeholder;
+        selectModalSelect.appendChild(emptyOption);
+
+        items.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.name;
+            selectModalSelect.appendChild(option);
+        });
+
+        selectModal.hidden = false;
+
+        const apply = () => {
+            cleanup();
+            selectModal.hidden = true;
+            resolve(selectModalSelect.value);
+        };
+
+        const cancel = () => {
+            cleanup();
+            selectModal.hidden = true;
+            resolve(null);
+        };
+
+        const cleanup = () => {
+            selectApplyBtn.removeEventListener("click", apply);
+            selectCancelBtn.removeEventListener("click", cancel);
+            selectCloseBtn.removeEventListener("click", cancel);
+        };
+
+        selectApplyBtn.addEventListener("click", apply);
+        selectCancelBtn.addEventListener("click", cancel);
+        selectCloseBtn.addEventListener("click", cancel);
+    });
+}
+
+async function addTagsForIds(ids) {
     if (tags.length === 0) {
         await showMessage({
             title: "Нет тегов",
@@ -1196,17 +1779,17 @@ async function addTagsToTransactions() {
         return;
     }
 
-    const selectedTagIds = await showTagModal({
+    const tagIds = await showTagModal({
         title: "Добавить теги",
         text: "Выберите теги, которые нужно добавить к выбранным транзакциям.",
         action: "add"
     });
 
-    if (selectedTagIds === null) {
+    if (tagIds === null) {
         return;
     }
 
-    if (selectedTagIds.length === 0) {
+    if (tagIds.length === 0) {
         await showMessage({
             title: "Теги не выбраны",
             message: "Выберите хотя бы один тег"
@@ -1217,8 +1800,8 @@ async function addTagsToTransactions() {
 
     try {
         await bulkUpdateTransactions({
-            transactionIds: selectedIds,
-            addTagIds: selectedTagIds
+            transactionIds: ids,
+            addTagIds: tagIds
         });
 
         await loadTransactions();
@@ -1233,9 +1816,7 @@ async function addTagsToTransactions() {
     }
 }
 
-async function replaceTagsForTransactions() {
-    const selectedIds = getSelectedIds();
-
+async function replaceTagsForIds(ids) {
     if (tags.length === 0) {
         await showMessage({
             title: "Нет тегов",
@@ -1245,20 +1826,20 @@ async function replaceTagsForTransactions() {
         return;
     }
 
-    const selectedTagIds = await showTagModal({
+    const tagIds = await showTagModal({
         title: "Заменить теги",
         text: "Выберите теги, которые должны остаться у выбранных транзакций.",
         action: "replace"
     });
 
-    if (selectedTagIds === null) {
+    if (tagIds === null) {
         return;
     }
 
     try {
         await bulkUpdateTransactions({
-            transactionIds: selectedIds,
-            replaceTagIds: selectedTagIds
+            transactionIds: ids,
+            replaceTagIds: tagIds
         });
 
         await loadTransactions();
@@ -1273,12 +1854,10 @@ async function replaceTagsForTransactions() {
     }
 }
 
-async function removeScopeFromTransactions() {
-    const selectedIds = getSelectedIds();
-
+async function removeScopeForIds(ids) {
     const confirmed = await showMessage({
         title: "Убрать из группы?",
-        message: `Убрать из группы выбранные транзакции (${selectedIds.length})?`,
+        message: `Убрать из группы выбранные транзакции (${ids.length})?`,
         confirm: true
     });
 
@@ -1288,7 +1867,7 @@ async function removeScopeFromTransactions() {
 
     try {
         await bulkUpdateTransactions({
-            transactionIds: selectedIds,
+            transactionIds: ids,
             deleteScope: true
         });
 
@@ -1304,9 +1883,7 @@ async function removeScopeFromTransactions() {
     }
 }
 
-async function setCommentForTransactions() {
-    const selectedIds = getSelectedIds();
-
+async function setCommentForIds(ids) {
     const comment = await showInputModal({
         title: "Комментарий",
         message: "Введите комментарий для выбранных транзакций",
@@ -1319,8 +1896,8 @@ async function setCommentForTransactions() {
 
     try {
         await bulkUpdateTransactions({
-            transactionIds: selectedIds,
-            comment: comment
+            transactionIds: ids,
+            comment
         });
 
         await loadTransactions();
@@ -1335,12 +1912,10 @@ async function setCommentForTransactions() {
     }
 }
 
-async function clearCommentFromTransactions() {
-    const selectedIds = getSelectedIds();
-
+async function clearCommentForIds(ids) {
     const confirmed = await showMessage({
         title: "Очистить комментарий?",
-        message: `Очистить комментарий у выбранных транзакций (${selectedIds.length})?`,
+        message: `Очистить комментарий у выбранных транзакций (${ids.length})?`,
         confirm: true
     });
 
@@ -1350,7 +1925,7 @@ async function clearCommentFromTransactions() {
 
     try {
         await bulkUpdateTransactions({
-            transactionIds: selectedIds,
+            transactionIds: ids,
             comment: ""
         });
 
@@ -1366,12 +1941,10 @@ async function clearCommentFromTransactions() {
     }
 }
 
-async function clearTagsFromTransactions() {
-    const selectedIds = getSelectedIds();
-
+async function clearTagsForIds(ids) {
     const confirmed = await showMessage({
         title: "Очистить теги?",
-        message: `Очистить теги у выбранных транзакций (${selectedIds.length})?`,
+        message: `Очистить теги у выбранных транзакций (${ids.length})?`,
         confirm: true
     });
 
@@ -1381,7 +1954,7 @@ async function clearTagsFromTransactions() {
 
     try {
         await bulkUpdateTransactions({
-            transactionIds: selectedIds,
+            transactionIds: ids,
             replaceTagIds: []
         });
 
@@ -1393,6 +1966,34 @@ async function clearTagsFromTransactions() {
         await showMessage({
             title: "Ошибка",
             message: "Не удалось очистить теги"
+        });
+    }
+}
+
+async function deleteSingleTransaction(id) {
+    const confirmed = await showMessage({
+        title: "Удалить транзакцию?",
+        message: "Удалить эту транзакцию?",
+        confirm: true
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        await apiRequest(`/transactions/${id}`, {
+            method: "DELETE"
+        });
+
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+
+        await showMessage({
+            title: "Ошибка",
+            message: "Не удалось удалить транзакцию"
         });
     }
 }
@@ -1734,11 +2335,11 @@ async function changeDatePeriod() {
         dateFrom = null;
         dateTo = null;
 
-        const span = dateFilterBtn.querySelector("span");
+        filterDateFrom.value = "";
+        filterDateTo.value = "";
 
-        if (span) {
-            span.textContent = "Все даты";
-        }
+        updateDateFilterText();
+        updateFilterCounter();
 
         applyFilters();
         return;
@@ -1770,12 +2371,11 @@ async function changeDatePeriod() {
     dateFrom = from;
     dateTo = to;
 
-    const span = dateFilterBtn.querySelector("span");
+    filterDateFrom.value = result.from;
+    filterDateTo.value = result.to;
 
-    if (span) {
-        span.textContent =
-            `${formatShortDate(from)} – ${formatShortDate(to)}`;
-    }
+    updateDateFilterText();
+    updateFilterCounter();
 
     applyFilters();
 }
@@ -1785,6 +2385,25 @@ async function changeDatePeriod() {
     УТИЛИТЫ
     =========================
 */
+
+function parseAmount(value) {
+    if (!value || !String(value).trim()) {
+        return null;
+    }
+
+    const number =
+        Number(
+            String(value)
+                .replace(",", ".")
+                .replace(/\s/g, "")
+        );
+
+    if (Number.isNaN(number)) {
+        return null;
+    }
+
+    return Math.abs(number);
+}
 
 function formatMoney(value) {
     return value.toLocaleString("ru-RU", {
