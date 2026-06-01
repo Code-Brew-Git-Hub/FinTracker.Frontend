@@ -403,6 +403,102 @@
     </button>
 </div>
 
+
+<div class="edit-transaction-modal-overlay" id="editTransactionModal" hidden>
+    <form class="edit-transaction-modal" id="editTransactionForm">
+
+        <div class="edit-transaction-modal-header">
+            <h2>Изменить транзакцию</h2>
+            <button class="edit-transaction-close-btn" id="editTransactionClose" type="button">×</button>
+        </div>
+
+        <div class="edit-transaction-body">
+
+            <div class="edit-kind-switcher">
+                <button
+                    type="button"
+                    class="edit-kind-btn edit-kind-expense active"
+                    data-edit-kind="expense"
+                >
+                    Расход
+                </button>
+
+                <button
+                    type="button"
+                    class="edit-kind-btn edit-kind-income"
+                    data-edit-kind="income"
+                >
+                    Доход
+                </button>
+            </div>
+
+            <div class="edit-form-row two-columns">
+                <label class="edit-form-field">
+                    <span>Сумма</span>
+                    <input type="text" id="editAmount" inputmode="decimal" placeholder="0,00">
+                </label>
+
+                <label class="edit-form-field">
+                    <span>Валюта</span>
+                    <select id="editCurrency">
+                        <option value="RUB">₽ RUB</option>
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                    </select>
+                </label>
+            </div>
+
+            <label class="edit-form-field">
+                <span>Дата</span>
+                <input type="date" id="editDate">
+            </label>
+
+            <label class="edit-form-field">
+                <span>Описание</span>
+                <input type="text" id="editDescription" placeholder="Описание транзакции">
+            </label>
+
+            <label class="edit-form-field">
+                <span>Категория</span>
+                <select id="editCategory">
+                    <option value="">Выберите категорию</option>
+                </select>
+            </label>
+
+            <label class="edit-form-field">
+                <span>Группа</span>
+                <select id="editScope">
+                    <option value="">Без группы</option>
+                </select>
+            </label>
+
+            <fieldset class="edit-tags-field">
+                <legend>Теги</legend>
+                <div class="edit-tags-list" id="editTagsList"></div>
+            </fieldset>
+
+            <label class="edit-form-field">
+                <span>Комментарий</span>
+                <textarea id="editComment" rows="3" placeholder="Комментарий"></textarea>
+            </label>
+
+            <p class="edit-transaction-error" id="editTransactionError" hidden></p>
+
+        </div>
+
+        <div class="edit-transaction-actions">
+            <button class="edit-cancel-btn" id="editTransactionCancel" type="button">
+                Отмена
+            </button>
+
+            <button class="edit-save-btn" id="editTransactionSave" type="submit">
+                Сохранить
+            </button>
+        </div>
+
+    </form>
+</div>
+
 <div class="app-modal-overlay" id="messageModal" hidden>
     <div class="app-modal">
         <div class="app-modal-header">

@@ -69,6 +69,22 @@ const filterTagsList = document.querySelector("#filterTagsList");
 
 const rowMenu = document.querySelector("#rowMenu");
 
+const editTransactionModal = document.querySelector("#editTransactionModal");
+const editTransactionForm = document.querySelector("#editTransactionForm");
+const editTransactionClose = document.querySelector("#editTransactionClose");
+const editTransactionCancel = document.querySelector("#editTransactionCancel");
+const editTransactionSave = document.querySelector("#editTransactionSave");
+const editTransactionError = document.querySelector("#editTransactionError");
+const editKindButtons = document.querySelectorAll(".edit-kind-btn");
+const editAmount = document.querySelector("#editAmount");
+const editCurrency = document.querySelector("#editCurrency");
+const editDate = document.querySelector("#editDate");
+const editDescription = document.querySelector("#editDescription");
+const editCategory = document.querySelector("#editCategory");
+const editScope = document.querySelector("#editScope");
+const editTagsList = document.querySelector("#editTagsList");
+const editComment = document.querySelector("#editComment");
+
 const messageModal = document.querySelector("#messageModal");
 const messageModalTitle = document.querySelector("#messageModalTitle");
 const messageModalText = document.querySelector("#messageModalText");
@@ -117,6 +133,8 @@ let activeSettingsTab = "categories";
 let currentSelectAction = null;
 let currentTagAction = null;
 let activeRowTransactionId = null;
+let activeEditTransactionId = null;
+let editTransactionKind = "expense";
 
 let messageModalResolver = null;
 let inputModalResolver = null;
@@ -368,10 +386,6 @@ function bindEvents() {
         selectCancelBtn.addEventListener("click", closeSelectModal);
     }
 
-    if (selectApplyBtn) {
-        selectApplyBtn.addEventListener("click", applySelectAction);
-    }
-
     if (selectModal) {
         selectModal.addEventListener("click", event => {
             if (event.target === selectModal) {
@@ -412,6 +426,7 @@ function bindEvents() {
         rowMenu.addEventListener("click", handleRowMenuAction);
     }
 
+    bindEditTransactionModal();
     bindAppModals();
     bindTagModal();
 }
@@ -1276,11 +1291,7 @@ async function handleRowMenuAction(event) {
     closeRowMenu();
 
     if (action === "edit") {
-        await showMessage({
-            title: "Редактирование",
-            message: "Полное редактирование транзакции пока не подключено. Используйте быстрые действия из этого меню."
-        });
-
+        openEditTransactionModal(transactionId);
         return;
     }
 
@@ -1319,6 +1330,261 @@ async function handleRowMenuAction(event) {
     if (action === "clear-tags") {
         await clearTagsForIds([transactionId]);
     }
+}
+
+
+/*
+    =========================
+    РЕДАКТИРОВАНИЕ ТРАНЗАКЦИИ
+    =========================
+*/
+
+function bindEditTransactionModal() {
+    if (!editTransactionModal) {
+        return;
+    }
+
+    editTransactionClose.addEventListener("click", closeEditTransactionModal);
+    editTransactionCancel.addEventListener("click", closeEditTransactionModal);
+
+    editTransactionModal.addEventListener("click", event => {
+        if (event.target === editTransactionModal) {
+            closeEditTransactionModal();
+        }
+    });
+
+    editKindButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            setEditTransactionKind(button.dataset.editKind);
+        });
+    });
+
+    editTransactionForm.addEventListener("submit", saveEditedTransaction);
+}
+
+function openEditTransactionModal(transactionId) {
+    const transaction =
+        transactions.find(item => item.id === transactionId);
+
+    if (!transaction) {
+        return;
+    }
+
+    activeEditTransactionId = transactionId;
+
+    setEditTransactionKind(
+        Number(transaction.amount) >= 0
+            ? "income"
+            : "expense"
+    );
+
+    editAmount.value = String(
+        Math.abs(Number(transaction.amount))
+    );
+
+    editCurrency.value = transaction.currency || "RUB";
+    editDate.value = formatDateInputValue(new Date(transaction.dateUtc));
+    editDescription.value = transaction.description || "";
+    editComment.value = transaction.comment || "";
+
+    renderEditCategoryOptions(transaction.category?.id || "");
+    renderEditScopeOptions(transaction.scope?.id || "");
+    renderEditTags(transaction.tags?.map(tag => tag.id) || []);
+
+    hideEditTransactionError();
+    editTransactionModal.hidden = false;
+}
+
+function closeEditTransactionModal() {
+    if (!editTransactionModal) {
+        return;
+    }
+
+    editTransactionModal.hidden = true;
+    activeEditTransactionId = null;
+    hideEditTransactionError();
+}
+
+function setEditTransactionKind(kind) {
+    editTransactionKind =
+        kind === "income"
+            ? "income"
+            : "expense";
+
+    editKindButtons.forEach(button => {
+        button.classList.toggle(
+            "active",
+            button.dataset.editKind === editTransactionKind
+        );
+    });
+}
+
+function renderEditCategoryOptions(selectedId) {
+    editCategory.innerHTML = `
+        <option value="">Выберите категорию</option>
+    `;
+
+    categories.forEach(category => {
+        const option = document.createElement("option");
+        option.value = category.id;
+        option.textContent = category.name;
+        editCategory.appendChild(option);
+    });
+
+    editCategory.value = selectedId;
+}
+
+function renderEditScopeOptions(selectedId) {
+    editScope.innerHTML = `
+        <option value="">Без группы</option>
+    `;
+
+    scopes.forEach(scope => {
+        const option = document.createElement("option");
+        option.value = scope.id;
+        option.textContent = scope.name;
+        editScope.appendChild(option);
+    });
+
+    editScope.value = selectedId;
+}
+
+function renderEditTags(selectedIds) {
+    editTagsList.innerHTML = "";
+
+    if (tags.length === 0) {
+        editTagsList.innerHTML = `
+            <span class="edit-tags-empty">
+                Теги пока не созданы
+            </span>
+        `;
+
+        return;
+    }
+
+    tags.forEach(tag => {
+        const label = document.createElement("label");
+        label.className = "edit-tag-option";
+
+        label.innerHTML = `
+            <input
+                type="checkbox"
+                value="${tag.id}"
+                ${selectedIds.includes(tag.id) ? "checked" : ""}
+            >
+
+            <span>
+                ${escapeHtml(tag.name)}
+            </span>
+        `;
+
+        editTagsList.appendChild(label);
+    });
+}
+
+async function saveEditedTransaction(event) {
+    event.preventDefault();
+    hideEditTransactionError();
+
+    if (!activeEditTransactionId) {
+        return;
+    }
+
+    const transaction =
+        transactions.find(item => item.id === activeEditTransactionId);
+
+    if (!transaction) {
+        return;
+    }
+
+    const parsedAmount = parseAmount(editAmount.value);
+
+    if (!parsedAmount || parsedAmount <= 0) {
+        showEditTransactionError("Укажите сумму больше нуля");
+        return;
+    }
+
+    if (!editDate.value) {
+        showEditTransactionError("Укажите дату");
+        return;
+    }
+
+    if (!editCategory.value) {
+        showEditTransactionError("Выберите категорию");
+        return;
+    }
+
+    const selectedEditTagIds =
+        Array.from(
+            editTagsList.querySelectorAll("input:checked")
+        ).map(input => input.value);
+
+    const payload = {
+        amount:
+            editTransactionKind === "expense"
+                ? -parsedAmount
+                : parsedAmount,
+        currency: editCurrency.value,
+        dateUtc: dateInputToUtcIso(editDate.value),
+        description: editDescription.value.trim(),
+        comment: editComment.value.trim(),
+        categoryId: editCategory.value
+    };
+
+    if (editScope.value) {
+        payload.scopeId = editScope.value;
+    } else if (transaction.scope) {
+        payload.deleteScope = true;
+    }
+
+    if (selectedEditTagIds.length > 0) {
+        payload.tagIds = selectedEditTagIds;
+    }
+
+    editTransactionSave.disabled = true;
+    editTransactionSave.textContent = "Сохранение...";
+
+    try {
+        await updateTransaction(activeEditTransactionId, payload);
+
+        if (
+            selectedEditTagIds.length === 0 &&
+            transaction.tags &&
+            transaction.tags.length > 0
+        ) {
+            await bulkUpdateTransactions({
+                transactionIds: [activeEditTransactionId],
+                replaceTagIds: []
+            });
+        }
+
+        closeEditTransactionModal();
+        await loadTransactions();
+
+    } catch (error) {
+        console.error(error);
+        showEditTransactionError(
+            error.message || "Не удалось сохранить транзакцию"
+        );
+
+    } finally {
+        editTransactionSave.disabled = false;
+        editTransactionSave.textContent = "Сохранить";
+    }
+}
+
+function showEditTransactionError(message) {
+    editTransactionError.textContent = message;
+    editTransactionError.hidden = false;
+}
+
+function hideEditTransactionError() {
+    editTransactionError.textContent = "";
+    editTransactionError.hidden = true;
+}
+
+function dateInputToUtcIso(value) {
+    return `${value}T12:00:00Z`;
 }
 
 /*
@@ -1665,10 +1931,16 @@ async function changeCategoryForIds(ids) {
     }
 
     try {
-        await bulkUpdateTransactions({
-            transactionIds: ids,
-            categoryId
-        });
+        if (ids.length === 1) {
+            await updateTransaction(ids[0], {
+                categoryId
+            });
+        } else {
+            await bulkUpdateTransactions({
+                transactionIds: ids,
+                categoryId
+            });
+        }
 
         categoryFilter.value = "";
         filterCategory.value = "";
@@ -1706,10 +1978,16 @@ async function addScopeForIds(ids) {
     }
 
     try {
-        await bulkUpdateTransactions({
-            transactionIds: ids,
-            scopeId
-        });
+        if (ids.length === 1) {
+            await updateTransaction(ids[0], {
+                scopeId
+            });
+        } else {
+            await bulkUpdateTransactions({
+                transactionIds: ids,
+                scopeId
+            });
+        }
 
         scopeFilter.value = "";
         filterScope.value = "";
@@ -1866,10 +2144,16 @@ async function removeScopeForIds(ids) {
     }
 
     try {
-        await bulkUpdateTransactions({
-            transactionIds: ids,
-            deleteScope: true
-        });
+        if (ids.length === 1) {
+            await updateTransaction(ids[0], {
+                deleteScope: true
+            });
+        } else {
+            await bulkUpdateTransactions({
+                transactionIds: ids,
+                deleteScope: true
+            });
+        }
 
         await loadTransactions();
 
@@ -1895,10 +2179,16 @@ async function setCommentForIds(ids) {
     }
 
     try {
-        await bulkUpdateTransactions({
-            transactionIds: ids,
-            comment
-        });
+        if (ids.length === 1) {
+            await updateTransaction(ids[0], {
+                comment
+            });
+        } else {
+            await bulkUpdateTransactions({
+                transactionIds: ids,
+                comment
+            });
+        }
 
         await loadTransactions();
 
@@ -1924,10 +2214,16 @@ async function clearCommentForIds(ids) {
     }
 
     try {
-        await bulkUpdateTransactions({
-            transactionIds: ids,
-            comment: ""
-        });
+        if (ids.length === 1) {
+            await updateTransaction(ids[0], {
+                comment: ""
+            });
+        } else {
+            await bulkUpdateTransactions({
+                transactionIds: ids,
+                comment: ""
+            });
+        }
 
         await loadTransactions();
 
@@ -2042,6 +2338,16 @@ async function deleteTransactions() {
 async function bulkUpdateTransactions(dto) {
     await apiRequest("/transactions/bulk", {
         method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dto)
+    });
+}
+
+async function updateTransaction(id, dto) {
+    return apiRequest(`/transactions/${id}`, {
+        method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
