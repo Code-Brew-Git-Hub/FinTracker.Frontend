@@ -145,7 +145,7 @@ function bindEvents() {
     });
 
     homeButton.addEventListener("click", () => {
-        window.location.href = "index.html";
+        window.location.href = "../index.html";
     });
 
     if (transactionsLink) {
@@ -172,7 +172,7 @@ function bindEvents() {
 
     if (cancelButton) {
         cancelButton.addEventListener("click", () => {
-            window.location.href = "index.html";
+            window.location.href = "../index.html";
         });
     }
 

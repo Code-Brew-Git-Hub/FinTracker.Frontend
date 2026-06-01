@@ -11,12 +11,12 @@ navLinks.forEach(link => {
 
 uploadButtons.forEach(button => {
     button.addEventListener("click", () => {
-        window.location.href = "upload.html";
+        window.location.href = "html/upload.html";
     });
 });
 
 if (transactionsButton) {
     transactionsButton.addEventListener("click", () => {
-        window.location.href = "transactions.html";
+        window.location.href = "html/transactions.html";
     });
 }
