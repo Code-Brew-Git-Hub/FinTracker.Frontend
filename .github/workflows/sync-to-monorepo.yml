@@ -12,7 +12,7 @@ on:
 
 env:
   MONOREPO_REPOSITORY: Code-Brew-Git-Hub/FinTracker
-  MONOREPO_BRANCH: "Lenyas's-final-version"
+  MONOREPO_BRANCH: "autodeploy"
   MONOREPO_SUBPATH: FinTracker.Frontend
 
 concurrency:
