@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTracker — Аналитика</title>
+
+    <link rel="stylesheet" href="../css/analytics.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <div class="logo" onclick="window.location.href='../index.html'">
+            <img src="../img/fintracker_logo_header.png" class="logo-img" alt="FinTracker">
+            <span>FinTracker</span>
+        </div>
+
+        <div class="right-menu">
+            <nav class="nav">
+                <a href="../index.html">Главная</a>
+                <a href="transactions.html">Транзакции</a>
+                <a class="active">Аналитика</a>
+                <a>О нас</a>
+            </nav>
+
+            <button class="btn" onclick="window.location.href='upload.html'">
+                Загрузить
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="analytics-page">
+    <div class="container">
+
+        <section class="analytics-filters">
+            <div class="filter-row">
+                <button class="date-filter" id="analyticsDateBtn">
+                    <img src="../img/calendar.png" alt="">
+                    <span id="analyticsDateText">Период не выбран</span>
+                </button>
+
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="analyticsSearchInput"
+                        placeholder="Поиск по описанию, тегам, категориям..."
+                    >
+                    <span class="search-icon">⌕</span>
+                </div>
+
+                <select id="analyticsCategoryFilter">
+                    <option value="">Все категории</option>
+                </select>
+
+                <select id="analyticsTypeFilter">
+                    <option value="">Все типы</option>
+                    <option value="Income">Доходы</option>
+                    <option value="Expense">Расходы</option>
+                </select>
+
+                <select id="analyticsScopeFilter">
+                    <option value="">Все группы</option>
+                </select>
+
+                <button class="filter-btn" id="analyticsFiltersBtn">
+                    <img src="../img/filter.png" alt="">
+                    <span>Фильтры</span>
+                    <b class="filter-counter" id="analyticsFilterCounter" hidden>0</b>
+                </button>
+            </div>
+
+            <div class="filter-actions">
+                <button class="apply-btn" id="analyticsApplyBtn">Применить</button>
+                <button class="reset-btn" id="analyticsResetBtn">↻ Сбросить</button>
+            </div>
+        </section>
+
+        <section class="summary-grid">
+            <article class="summary-card income-card">
+                <div class="summary-icon">
+                    <span>↑</span>
+                </div>
+
+                <div class="summary-info">
+                    <h3>Доходы</h3>
+                    <strong id="totalIncome">Нет данных</strong>
+                    <p>Загрузите транзакции</p>
+                </div>
+            </article>
+
+            <article class="summary-card expense-card">
+                <div class="summary-icon">
+                    <span>↓</span>
+                </div>
+
+                <div class="summary-info">
+                    <h3>Расходы</h3>
+                    <strong id="totalExpense">Нет данных</strong>
+                    <p>Загрузите транзакции</p>
+                </div>
+            </article>
+
+            <article class="summary-card balance-card">
+                <div class="summary-icon">
+                    <span>▤</span>
+                </div>
+
+                <div class="summary-info">
+                    <h3>Итоговый баланс</h3>
+                    <strong id="totalBalance">Нет данных</strong>
+                    <p>Загрузите транзакции</p>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-grid">
+            <article class="analytics-card">
+                <h2>Расходы по категориям</h2>
+
+                <div class="analytics-table">
+                    <div class="analytics-table-head">
+                        <span>Категория</span>
+                        <span>Сумма</span>
+                        <span>Доля</span>
+                    </div>
+
+                    <div class="analytics-table-body" id="categoryAnalyticsList">
+                        <div class="empty-analytics">
+                            Загрузите транзакции, чтобы увидеть аналитику
+                        </div>
+                    </div>
+                </div>
+
+                <button class="card-link">Перейти ко всем категориям →</button>
+            </article>
+
+            <article class="analytics-card">
+                <h2>Расходы по группам (scope)</h2>
+
+                <div class="analytics-table">
+                    <div class="analytics-table-head">
+                        <span>Группа</span>
+                        <span>Сумма</span>
+                        <span>Оп.</span>
+                    </div>
+
+                    <div class="analytics-table-body" id="scopeAnalyticsList">
+                        <div class="empty-analytics">
+                            Загрузите транзакции, чтобы увидеть аналитику
+                        </div>
+                    </div>
+                </div>
+
+                <button class="card-link">Перейти ко всем группам →</button>
+            </article>
+
+            <article class="analytics-card">
+                <h2>Расходы по тегам</h2>
+
+                <div class="analytics-table">
+                    <div class="analytics-table-head">
+                        <span>Тег</span>
+                        <span>Сумма</span>
+                        <span>Оп.</span>
+                    </div>
+
+                    <div class="analytics-table-body" id="tagAnalyticsList">
+                        <div class="empty-analytics">
+                            Загрузите транзакции, чтобы увидеть аналитику
+                        </div>
+                    </div>
+                </div>
+
+                <button class="card-link">Перейти ко всем тегам →</button>
+            </article>
+
+            <article class="analytics-card time-card">
+                <div class="time-card-header">
+                    <h2>Операции по времени</h2>
+
+                    <div class="period-tabs">
+                        <button data-grouping="day">День</button>
+                        <button data-grouping="week">Неделя</button>
+                        <button class="active" data-grouping="month">Месяц</button>
+                    </div>
+                </div>
+
+                <div class="analytics-table">
+                    <div class="analytics-table-head time-head">
+                        <span>Период</span>
+                        <span>Доход</span>
+                        <span>Расход</span>
+                        <span>Баланс</span>
+                    </div>
+
+                    <div class="analytics-table-body" id="timeAnalyticsList">
+                        <div class="empty-analytics">
+                            Загрузите транзакции, чтобы увидеть аналитику
+                        </div>
+                    </div>
+                </div>
+
+                <button class="card-link">Смотреть все расходы →</button>
+            </article>
+        </section>
+
+    </div>
+</main>
+
+<script src="../js/analytics.js"></script>
+</body>
+</html>

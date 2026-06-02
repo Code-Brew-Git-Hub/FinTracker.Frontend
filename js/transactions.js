@@ -1519,11 +1519,19 @@ async function saveEditedTransaction(event) {
             editTagsList.querySelectorAll("input:checked")
         ).map(input => input.value);
 
+    const newAmount =
+        editTransactionKind === "expense"
+            ? -parsedAmount
+            : parsedAmount;
+
+    const oldAmount =
+        Number(transaction.amount);
+
+    const typeChanged =
+        oldAmount >= 0 !== newAmount >= 0;
+
     const payload = {
-        amount:
-            editTransactionKind === "expense"
-                ? -parsedAmount
-                : parsedAmount,
+        amount: newAmount,
         currency: editCurrency.value,
         dateUtc: dateInputToUtcIso(editDate.value),
         description: editDescription.value.trim(),
@@ -1545,16 +1553,43 @@ async function saveEditedTransaction(event) {
     editTransactionSave.textContent = "Сохранение...";
 
     try {
-        await updateTransaction(activeEditTransactionId, payload);
+        try {
+            await updateTransaction(activeEditTransactionId, payload);
 
-        if (
-            selectedEditTagIds.length === 0 &&
-            transaction.tags &&
-            transaction.tags.length > 0
-        ) {
-            await bulkUpdateTransactions({
-                transactionIds: [activeEditTransactionId],
-                replaceTagIds: []
+            if (
+                selectedEditTagIds.length === 0 &&
+                transaction.tags &&
+                transaction.tags.length > 0
+            ) {
+                await bulkUpdateTransactions({
+                    transactionIds: [activeEditTransactionId],
+                    replaceTagIds: []
+                });
+            }
+
+        } catch (putError) {
+            if (!typeChanged) {
+                throw putError;
+            }
+
+            const createPayload = {
+                amount: payload.amount,
+                currency: payload.currency,
+                dateUtc: payload.dateUtc,
+                description: payload.description || null,
+                comment: payload.comment || null,
+                categoryId: payload.categoryId,
+                tagIds: selectedEditTagIds
+            };
+
+            if (editScope.value) {
+                createPayload.scopeId = editScope.value;
+            }
+
+            await createTransaction(createPayload);
+
+            await apiRequest(`/transactions/${activeEditTransactionId}`, {
+                method: "DELETE"
             });
         }
 
@@ -1563,6 +1598,7 @@ async function saveEditedTransaction(event) {
 
     } catch (error) {
         console.error(error);
+
         showEditTransactionError(
             error.message || "Не удалось сохранить транзакцию"
         );
@@ -2345,9 +2381,9 @@ async function bulkUpdateTransactions(dto) {
     });
 }
 
-async function updateTransaction(id, dto) {
-    return apiRequest(`/transactions/${id}`, {
-        method: "PUT",
+async function createTransaction(dto) {
+    return apiRequest("/transactions", {
+        method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
