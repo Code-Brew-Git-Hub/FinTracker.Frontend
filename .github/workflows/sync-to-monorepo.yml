@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout frontend
         uses: actions/checkout@v4
+        with:
+          path: subrepo
 
       - name: Checkout monorepo
         uses: actions/checkout@v4
@@ -32,8 +34,10 @@ jobs:
           ref: ${{ env.MONOREPO_BRANCH }}
           path: monorepo
 
-      - name: Copy into monorepo folder
+      - name: Replace monorepo folder
         run: |
+          rm -rf "monorepo/${MONOREPO_SUBPATH}"
+          mkdir -p "monorepo/${MONOREPO_SUBPATH}"
           rsync -av --delete \
             --exclude '.git/' \
             --exclude '.github/workflows/sync-to-monorepo.yml' \
@@ -41,7 +45,7 @@ jobs:
             --exclude 'dist/' \
             --exclude 'dist-ssr/' \
             --exclude '.env' \
-            ./ "monorepo/${MONOREPO_SUBPATH}/"
+            subrepo/ "monorepo/${MONOREPO_SUBPATH}/"
 
       - name: Commit and push
         working-directory: monorepo
