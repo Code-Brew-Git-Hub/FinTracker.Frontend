@@ -36,7 +36,7 @@
 
         <section class="analytics-filters">
             <div class="filter-row">
-                <button class="date-filter" id="analyticsDateBtn">
+                <button class="date-filter" id="analyticsDateBtn" type="button">
                     <img src="../img/calendar.png" alt="">
                     <span id="analyticsDateText">Период не выбран</span>
                 </button>
@@ -64,7 +64,7 @@
                     <option value="">Все группы</option>
                 </select>
 
-                <button class="filter-btn" id="analyticsFiltersBtn">
+                <button class="filter-btn" id="analyticsFiltersBtn" type="button">
                     <img src="../img/filter.png" alt="">
                     <span>Фильтры</span>
                     <b class="filter-counter" id="analyticsFilterCounter" hidden>0</b>
@@ -72,8 +72,13 @@
             </div>
 
             <div class="filter-actions">
-                <button class="apply-btn" id="analyticsApplyBtn">Применить</button>
-                <button class="reset-btn" id="analyticsResetBtn">↻ Сбросить</button>
+                <button class="apply-btn" id="analyticsApplyBtn" type="button">
+                    Применить
+                </button>
+
+                <button class="reset-btn" id="analyticsResetBtn" type="button">
+                    ↻ Сбросить
+                </button>
             </div>
         </section>
 
@@ -86,7 +91,7 @@
                 <div class="summary-info">
                     <h3>Доходы</h3>
                     <strong id="totalIncome">Нет данных</strong>
-                    <p>Загрузите транзакции</p>
+                    <p id="totalIncomeHint">Загрузите транзакции</p>
                 </div>
             </article>
 
@@ -98,7 +103,7 @@
                 <div class="summary-info">
                     <h3>Расходы</h3>
                     <strong id="totalExpense">Нет данных</strong>
-                    <p>Загрузите транзакции</p>
+                    <p id="totalExpenseHint">Загрузите транзакции</p>
                 </div>
             </article>
 
@@ -110,13 +115,13 @@
                 <div class="summary-info">
                     <h3>Итоговый баланс</h3>
                     <strong id="totalBalance">Нет данных</strong>
-                    <p>Загрузите транзакции</p>
+                    <p id="totalBalanceHint">Загрузите транзакции</p>
                 </div>
             </article>
         </section>
 
         <section class="analytics-grid">
-            <article class="analytics-card">
+            <article class="analytics-card categories-card">
                 <h2>Расходы по категориям</h2>
 
                 <div class="analytics-table">
@@ -133,10 +138,12 @@
                     </div>
                 </div>
 
-                <button class="card-link">Перейти ко всем категориям →</button>
+                <button class="card-link" id="openExpenseCategoriesBtn" type="button">
+                    Перейти ко всем категориям →
+                </button>
             </article>
 
-            <article class="analytics-card">
+            <article class="analytics-card scopes-card">
                 <h2>Расходы по группам (scope)</h2>
 
                 <div class="analytics-table">
@@ -148,15 +155,17 @@
 
                     <div class="analytics-table-body" id="scopeAnalyticsList">
                         <div class="empty-analytics">
-                            Загрузите транзакции, чтобы увидеть аналитику
+                            Нет расходов в группах
                         </div>
                     </div>
                 </div>
 
-                <button class="card-link">Перейти ко всем группам →</button>
+                <button class="card-link" id="openGroupedExpensesBtn" type="button">
+                    Перейти ко всем группам →
+                </button>
             </article>
 
-            <article class="analytics-card">
+            <article class="analytics-card tags-card">
                 <h2>Расходы по тегам</h2>
 
                 <div class="analytics-table">
@@ -168,12 +177,14 @@
 
                     <div class="analytics-table-body" id="tagAnalyticsList">
                         <div class="empty-analytics">
-                            Загрузите транзакции, чтобы увидеть аналитику
+                            Нет расходов с тегами
                         </div>
                     </div>
                 </div>
 
-                <button class="card-link">Перейти ко всем тегам →</button>
+                <button class="card-link" id="openTaggedExpensesBtn" type="button">
+                    Перейти ко всем тегам →
+                </button>
             </article>
 
             <article class="analytics-card time-card">
@@ -181,9 +192,9 @@
                     <h2>Операции по времени</h2>
 
                     <div class="period-tabs">
-                        <button data-grouping="day">День</button>
-                        <button data-grouping="week">Неделя</button>
-                        <button class="active" data-grouping="month">Месяц</button>
+                        <button type="button" data-grouping="day">День</button>
+                        <button type="button" data-grouping="week">Неделя</button>
+                        <button type="button" class="active" data-grouping="month">Месяц</button>
                     </div>
                 </div>
 
@@ -202,12 +213,150 @@
                     </div>
                 </div>
 
-                <button class="card-link">Смотреть все расходы →</button>
+                <button class="card-link" id="openAllExpensesBtn" type="button">
+                    Смотреть все расходы →
+                </button>
             </article>
         </section>
 
     </div>
 </main>
+
+<div class="analytics-modal-overlay" id="analyticsDateModal" hidden>
+    <form class="analytics-modal date-modal" id="analyticsDateForm">
+        <div class="analytics-modal-header">
+            <h2>Выбор периода</h2>
+            <button class="analytics-modal-close" id="analyticsDateClose" type="button">×</button>
+        </div>
+
+        <p class="analytics-modal-text">
+            Выберите даты, за которые нужно показать аналитику.
+        </p>
+
+        <div class="date-modal-fields">
+            <label>
+                <span>Дата от</span>
+                <input type="date" id="analyticsDateFromInput">
+            </label>
+
+            <label>
+                <span>Дата до</span>
+                <input type="date" id="analyticsDateToInput">
+            </label>
+        </div>
+
+        <div class="analytics-modal-actions">
+            <button class="analytics-modal-cancel" id="analyticsDateReset" type="button">
+                Весь период
+            </button>
+
+            <button class="analytics-modal-secondary" id="analyticsDateCancel" type="button">
+                Отмена
+            </button>
+
+            <button class="analytics-modal-primary" type="submit">
+                Применить
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="analytics-modal-overlay" id="analyticsFiltersModal" hidden>
+    <div class="analytics-modal filters-modal">
+        <div class="analytics-modal-header">
+            <h2>Фильтры</h2>
+            <button class="analytics-modal-close" id="analyticsFiltersClose" type="button">×</button>
+        </div>
+
+        <div class="filters-grid">
+            <label class="filters-field">
+                <span>Дата с</span>
+                <input type="date" id="analyticsFilterDateFrom">
+            </label>
+
+            <label class="filters-field">
+                <span>Дата по</span>
+                <input type="date" id="analyticsFilterDateTo">
+            </label>
+
+            <label class="filters-field filters-field-wide">
+                <span>Поиск</span>
+                <input
+                    type="text"
+                    id="analyticsFilterSearch"
+                    placeholder="По описанию, тегам, категориям..."
+                    maxlength="50"
+                >
+            </label>
+
+            <label class="filters-field">
+                <span>Сумма от</span>
+                <input
+                    type="text"
+                    id="analyticsFilterAmountMin"
+                    inputmode="decimal"
+                    placeholder="0"
+                >
+            </label>
+
+            <label class="filters-field">
+                <span>Сумма до</span>
+                <input
+                    type="text"
+                    id="analyticsFilterAmountMax"
+                    inputmode="decimal"
+                    placeholder="0"
+                >
+            </label>
+
+            <label class="filters-field">
+                <span>Категория</span>
+                <select id="analyticsFilterCategory">
+                    <option value="">Все категории</option>
+                </select>
+            </label>
+
+            <label class="filters-field">
+                <span>Тип</span>
+                <select id="analyticsFilterType">
+                    <option value="">Все типы</option>
+                    <option value="Expense">Расходы</option>
+                    <option value="Income">Доходы</option>
+                </select>
+            </label>
+
+            <label class="filters-field">
+                <span>Группа</span>
+                <select id="analyticsFilterScope">
+                    <option value="">Все группы</option>
+                </select>
+            </label>
+
+            <label class="filters-checkbox">
+                <input type="checkbox" id="analyticsFilterWithoutScope">
+                <span>Только без группы</span>
+            </label>
+        </div>
+
+        <fieldset class="filters-tags">
+            <legend>Теги</legend>
+
+            <div class="filters-tags-list" id="analyticsFilterTagsList">
+                <span class="filters-empty">Теги пока не созданы</span>
+            </div>
+        </fieldset>
+
+        <div class="analytics-modal-actions">
+            <button class="analytics-modal-cancel" id="analyticsFiltersReset" type="button">
+                Сбросить
+            </button>
+
+            <button class="analytics-modal-primary" id="analyticsFiltersApply" type="button">
+                Применить
+            </button>
+        </div>
+    </div>
+</div>
 
 <script src="../js/analytics.js"></script>
 </body>

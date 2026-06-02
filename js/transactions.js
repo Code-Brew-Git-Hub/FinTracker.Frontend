@@ -128,6 +128,8 @@ let amountMin = "";
 let amountMax = "";
 let selectedTagIds = [];
 let excludeScopes = false;
+let onlyWithScope = false;
+let onlyWithTags = false;
 
 let activeSettingsTab = "categories";
 let currentSelectAction = null;
@@ -145,6 +147,7 @@ let tagModalResolver = null;
 document.addEventListener("DOMContentLoaded", async () => {
     bindEvents();
     await loadReferences();
+    applyFiltersFromUrl();
     await loadTransactions();
 });
 
@@ -181,6 +184,29 @@ async function apiRequest(path, options = {}) {
     }
 
     return data?.data ?? data;
+}
+
+function applyFiltersFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    const type = params.get("type");
+    const hasScope = params.get("hasScope");
+    const hasTags = params.get("hasTags");
+
+    if (type) {
+        typeFilter.value = type;
+        filterType.value = type;
+    }
+
+    if (hasScope === "true") {
+        onlyWithScope = true;
+    }
+
+    if (hasTags === "true") {
+        onlyWithTags = true;
+    }
+
+    updateFilterCounter();
 }
 
 async function loadTransactions() {
@@ -787,11 +813,17 @@ function applyFilters() {
             !selectedCategory ||
             transaction.category?.id === selectedCategory;
 
-        const matchesScope =
+        let matchesScope =
             excludeScopes
                 ? !transaction.scope
                 : !selectedScope ||
                   transaction.scope?.id === selectedScope;
+
+        if (onlyWithScope) {
+            matchesScope =
+                matchesScope &&
+                Boolean(transaction.scope);
+        }
 
         const matchesType =
             !selectedType ||
@@ -817,11 +849,17 @@ function applyFilters() {
         const transactionTagIds =
             transaction.tags?.map(tag => tag.id) || [];
 
-        const matchesTags =
+        let matchesTags =
             selectedTagIds.length === 0 ||
             selectedTagIds.every(tagId =>
                 transactionTagIds.includes(tagId)
             );
+
+        if (onlyWithTags) {
+            matchesTags =
+                matchesTags &&
+                transactionTagIds.length > 0;
+        }
 
         return (
             matchesSearch &&
@@ -837,6 +875,7 @@ function applyFilters() {
     });
 
     currentPage = 1;
+
     updateFilterCounter();
     renderTable();
 }
@@ -864,6 +903,8 @@ function resetFilters() {
     amountMax = "";
     selectedTagIds = [];
     excludeScopes = false;
+    onlyWithScope = false;
+    onlyWithTags = false;
 
     renderFilterTags();
     updateDateFilterText();
@@ -912,6 +953,8 @@ function countActiveFilters() {
     if (amountMin.trim() || amountMax.trim()) count++;
     if (selectedTagIds.length > 0) count++;
     if (excludeScopes) count++;
+    if (onlyWithScope) count++;
+    if (onlyWithTags) count++;
 
     return count;
 }
