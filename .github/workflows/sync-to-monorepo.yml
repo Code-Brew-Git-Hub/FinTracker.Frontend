@@ -15,6 +15,10 @@ env:
   MONOREPO_BRANCH: "Lenyas's-final-version"
   MONOREPO_SUBPATH: FinTracker.Frontend
 
+concurrency:
+  group: sync-to-monorepo-Code-Brew-Git-Hub/FinTracker
+  cancel-in-progress: false
+
 jobs:
   sync:
     name: Push to FinTracker.Frontend
@@ -58,4 +62,5 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync ${{ env.MONOREPO_SUBPATH }} from ${{ github.repository }}@${{ github.sha }}"
-          git push
+          git pull --rebase origin "${MONOREPO_BRANCH}"
+          git push origin "HEAD:${MONOREPO_BRANCH}"
