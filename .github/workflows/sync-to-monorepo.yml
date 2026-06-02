@@ -12,8 +12,12 @@ on:
 
 env:
   MONOREPO_REPOSITORY: Code-Brew-Git-Hub/FinTracker
-  MONOREPO_BRANCH: "Lenyas's-final-version"
+  MONOREPO_BRANCH: "autodeploy"
   MONOREPO_SUBPATH: FinTracker.Frontend
+
+concurrency:
+  group: sync-to-monorepo-Code-Brew-Git-Hub/FinTracker
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -23,6 +27,8 @@ jobs:
     steps:
       - name: Checkout frontend
         uses: actions/checkout@v4
+        with:
+          path: subrepo
 
       - name: Checkout monorepo
         uses: actions/checkout@v4
@@ -32,8 +38,10 @@ jobs:
           ref: ${{ env.MONOREPO_BRANCH }}
           path: monorepo
 
-      - name: Copy into monorepo folder
+      - name: Replace monorepo folder
         run: |
+          rm -rf "monorepo/${MONOREPO_SUBPATH}"
+          mkdir -p "monorepo/${MONOREPO_SUBPATH}"
           rsync -av --delete \
             --exclude '.git/' \
             --exclude '.github/workflows/sync-to-monorepo.yml' \
@@ -41,7 +49,7 @@ jobs:
             --exclude 'dist/' \
             --exclude 'dist-ssr/' \
             --exclude '.env' \
-            ./ "monorepo/${MONOREPO_SUBPATH}/"
+            subrepo/ "monorepo/${MONOREPO_SUBPATH}/"
 
       - name: Commit and push
         working-directory: monorepo
@@ -54,4 +62,5 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync ${{ env.MONOREPO_SUBPATH }} from ${{ github.repository }}@${{ github.sha }}"
-          git push
+          git pull --rebase origin "${MONOREPO_BRANCH}"
+          git push origin "HEAD:${MONOREPO_BRANCH}"
