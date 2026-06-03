@@ -2223,16 +2223,10 @@ async function removeScopeForIds(ids) {
     }
 
     try {
-        if (ids.length === 1) {
-            await updateTransaction(ids[0], {
-                deleteScope: true
-            });
-        } else {
-            await bulkUpdateTransactions({
-                transactionIds: ids,
-                deleteScope: true
-            });
-        }
+        await bulkUpdateTransactions({
+            transactionIds: ids,
+            deleteScope: true
+        });
 
         await loadTransactions();
 
