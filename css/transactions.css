@@ -394,8 +394,8 @@ th:last-child {
 td {
     height: 54px;
     color: #24446B;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 400;
     border-bottom: 1px solid #D2E1F7;
     border-right: 1px solid #D2E1F7;
     padding: 0 16px;
@@ -528,12 +528,12 @@ tbody tr:hover {
 
 .amount-income {
     color: #00A85A;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .amount-expense {
     color: #FF2F2F;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 /* TAGS */
@@ -546,8 +546,8 @@ tbody tr:hover {
     justify-content: center;
     border-radius: 14px;
     padding: 4px 10px 5px;
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 15px;
+    font-weight: 500;
     max-width: 100%;
 }
 

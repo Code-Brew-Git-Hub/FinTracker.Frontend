@@ -221,16 +221,65 @@ async function loadTransactions() {
             return new Date(b.dateUtc) - new Date(a.dateUtc);
         });
 
+        setDefaultLastLoadedMonthPeriod();
+
         applyFilters();
 
     } catch (error) {
         console.error(error);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="9" class="loading-row">
+                    Не удалось загрузить транзакции
+                </td>
+            </tr>
+        `;
 
         await showMessage({
             title: "Ошибка",
             message: "Не удалось загрузить транзакции"
         });
     }
+}
+
+function setDefaultLastLoadedMonthPeriod() {
+    if (!transactions.length) {
+        dateFrom = null;
+        dateTo = null;
+
+        filterDateFrom.value = "";
+        filterDateTo.value = "";
+
+        updateDateFilterText();
+        updateFilterCounter();
+
+        return;
+    }
+
+    const latestTransactionDate = new Date(transactions[0].dateUtc);
+
+    dateFrom = new Date(
+        latestTransactionDate.getFullYear(),
+        latestTransactionDate.getMonth(),
+        1
+    );
+
+    dateTo = new Date(
+        latestTransactionDate.getFullYear(),
+        latestTransactionDate.getMonth(),
+        latestTransactionDate.getDate(),
+        23,
+        59,
+        59,
+        999
+    );
+
+    filterDateFrom.value = formatDateInputValue(dateFrom);
+    filterDateTo.value = formatDateInputValue(dateTo);
+
+    updateDateFilterText();
+    updateFilterCounter();
 }
 
 async function loadReferences() {
@@ -880,7 +929,7 @@ function applyFilters() {
     renderTable();
 }
 
-function resetFilters() {
+async function resetFilters() {
     searchInput.value = "";
     categoryFilter.value = "";
     scopeFilter.value = "";
@@ -2246,16 +2295,10 @@ async function setCommentForIds(ids) {
     }
 
     try {
-        if (ids.length === 1) {
-            await updateTransaction(ids[0], {
-                comment
-            });
-        } else {
-            await bulkUpdateTransactions({
-                transactionIds: ids,
-                comment
-            });
-        }
+        await bulkUpdateTransactions({
+            transactionIds: ids,
+            comment
+        });
 
         await loadTransactions();
 
@@ -2281,16 +2324,10 @@ async function clearCommentForIds(ids) {
     }
 
     try {
-        if (ids.length === 1) {
-            await updateTransaction(ids[0], {
-                comment: ""
-            });
-        } else {
-            await bulkUpdateTransactions({
-                transactionIds: ids,
-                comment: ""
-            });
-        }
+        await bulkUpdateTransactions({
+            transactionIds: ids,
+            comment: ""
+        });
 
         await loadTransactions();
 
