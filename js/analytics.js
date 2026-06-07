@@ -156,11 +156,15 @@ async function loadAnalyticsData() {
 
         const query = buildAnalyticsQuery();
 
+        const expenseQuery = buildAnalyticsQuery({
+            forcedType: "Expense"
+        });
+
         const [summaryResponse, categoryResponse, scopeResponse, tagResponse, timeResponse] = await Promise.all([
             fetchJson(`${API_BASE_URL}/analytics/summary${query}`),
-            fetchJson(`${API_BASE_URL}/analytics/by-category${query}`),
-            fetchJson(`${API_BASE_URL}/analytics/by-scope${query}`),
-            fetchJson(`${API_BASE_URL}/analytics/by-tag${query}`),
+            fetchJson(`${API_BASE_URL}/analytics/by-category${expenseQuery}`),
+            fetchJson(`${API_BASE_URL}/analytics/by-scope${expenseQuery}`),
+            fetchJson(`${API_BASE_URL}/analytics/by-tag${expenseQuery}`),
             fetchJson(`${API_BASE_URL}/analytics/by-time${query}&grouping=${encodeURIComponent(analyticsState.grouping)}`)
         ]);
 
@@ -191,7 +195,7 @@ async function fetchJson(url) {
     return await response.json();
 }
 
-function buildAnalyticsQuery() {
+function buildAnalyticsQuery(options = {}) {
     const params = new URLSearchParams();
 
     if (analyticsState.filters.dateFrom) {
@@ -214,7 +218,9 @@ function buildAnalyticsQuery() {
         params.append("CategoryId", analyticsState.filters.categoryId);
     }
 
-    if (analyticsState.filters.type) {
+    if (options.forcedType) {
+        params.append("Type", options.forcedType);
+    } else if (analyticsState.filters.type) {
         params.append("Type", analyticsState.filters.type);
     }
 

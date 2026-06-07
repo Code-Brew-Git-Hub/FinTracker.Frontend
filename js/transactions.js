@@ -2057,16 +2057,10 @@ async function addScopeForIds(ids) {
     }
 
     try {
-        if (ids.length === 1) {
-            await updateTransaction(ids[0], {
-                scopeId
-            });
-        } else {
-            await bulkUpdateTransactions({
-                transactionIds: ids,
-                scopeId
-            });
-        }
+        await bulkUpdateTransactions({
+            transactionIds: ids,
+            scopeId
+        });
 
         scopeFilter.value = "";
         filterScope.value = "";
