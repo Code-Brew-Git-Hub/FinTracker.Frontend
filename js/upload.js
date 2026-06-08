@@ -621,10 +621,15 @@ function renderImportResult(result) {
             const amount =
                 Number(transaction.amount);
 
+            const currencySymbol =
+                getCurrencySymbol(
+                    transaction.currency || "RUB"
+                );
+
             const formattedAmount =
                 amount > 0
-                    ? `+${amount.toLocaleString("ru-RU")} ₽`
-                    : `${amount.toLocaleString("ru-RU")} ₽`;
+                    ? `+${amount.toLocaleString("ru-RU")} ${currencySymbol}`
+                    : `${amount.toLocaleString("ru-RU")} ${currencySymbol}`;
 
             let categoryClass =
                 "gray-tag";
@@ -915,6 +920,16 @@ function closeMessage() {
     УТИЛИТЫ
     =========================
 */
+
+function getCurrencySymbol(currency) {
+    const symbols = {
+        RUB: "₽",
+        USD: "$",
+        EUR: "€"
+    };
+
+    return symbols[currency] || currency;
+}
 
 function escapeHtml(value) {
     return String(value)

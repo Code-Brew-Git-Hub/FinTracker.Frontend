@@ -1172,9 +1172,10 @@ function renderTable() {
             amount >= 0 ? "amount-income" : "amount-expense";
 
         const amountText =
-            amount >= 0
-                ? `+${formatMoney(amount)} ₽`
-                : `${formatMoney(amount)} ₽`;
+            formatTransactionAmount(
+                amount,
+                transaction.currency
+            );
 
         const date = new Date(transaction.dateUtc);
 
@@ -2449,6 +2450,16 @@ async function bulkUpdateTransactions(dto) {
     });
 }
 
+async function updateTransaction(id, dto) {
+    return apiRequest(`/transactions/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dto)
+    });
+}
+
 async function createTransaction(dto) {
     return apiRequest("/transactions", {
         method: "POST",
@@ -2820,6 +2831,31 @@ function formatMoney(value) {
         minimumFractionDigits: value % 1 === 0 ? 0 : 2,
         maximumFractionDigits: 2
     });
+}
+
+function formatTransactionAmount(amount, currency) {
+    const normalizedCurrency =
+        currency || "RUB";
+
+    const formattedAmount =
+        formatMoney(amount);
+
+    const currencySymbol =
+        getCurrencySymbol(normalizedCurrency);
+
+    return amount >= 0
+        ? `+${formattedAmount} ${currencySymbol}`
+        : `${formattedAmount} ${currencySymbol}`;
+}
+
+function getCurrencySymbol(currency) {
+    const symbols = {
+        RUB: "₽",
+        USD: "$",
+        EUR: "€"
+    };
+
+    return symbols[currency] || currency;
 }
 
 function formatDateInputValue(date) {
