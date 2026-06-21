@@ -224,6 +224,38 @@
 
             </div>
 
+            <div class="preset-card" id="presetCard">
+
+                <h3>Пресет (маппинг заголовков)</h3>
+
+                <div class="preset-controls">
+
+                    <select id="presetSelect">
+                        <option value="">Загрузка пресетов...</option>
+                    </select>
+
+                    <button
+                        type="button"
+                        class="preset-edit-btn"
+                        id="presetQuickEditBtn"
+                    >
+                        <img src="../img/black_pencil.png" alt="">
+                        Изменить
+                    </button>
+
+                    <button
+                        type="button"
+                        class="preset-settings-btn"
+                        id="presetSettingsBtn"
+                        aria-label="Настройки пресетов"
+                    >
+                        <img src="../img/configure.png" alt="">
+                    </button>
+
+                </div>
+
+            </div>
+
         </div>
 
         <div class="upload-right">
@@ -385,6 +417,248 @@
 
     </div>
 </section>
+
+<div class="preset-modal-overlay" id="presetsModal" hidden>
+    <div class="presets-modal">
+
+        <div class="presets-modal-header">
+            <div>
+                <h2>Пресеты банков</h2>
+                <p>Выберите пресет для загрузки и импорта транзакций</p>
+            </div>
+
+            <button
+                type="button"
+                class="presets-modal-close"
+                id="presetsModalClose"
+                aria-label="Закрыть"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="presets-list" id="presetsList">
+            <div class="presets-empty">
+                Пресеты загружаются...
+            </div>
+        </div>
+
+        <button
+            type="button"
+            class="add-preset-btn"
+            id="addPresetBtn"
+        >
+            <img src="../img/plusik.png" alt="">
+            Добавить новый пресет
+        </button>
+
+        <div class="presets-modal-actions">
+
+            <button
+                type="button"
+                class="presets-cancel-btn"
+                id="presetsCancelBtn"
+            >
+                Отмена
+            </button>
+
+            <button
+                type="button"
+                class="presets-choose-btn"
+                id="presetsChooseBtn"
+            >
+                Выбрать
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<div class="preset-editor-overlay" id="presetEditorModal" hidden>
+    <div class="preset-editor-modal">
+
+        <div class="preset-editor-header">
+            <h2 id="presetEditorTitle">Новый пресет</h2>
+
+            <button
+                type="button"
+                class="preset-editor-close"
+                id="presetEditorClose"
+                aria-label="Закрыть"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="preset-editor-content">
+
+            <label class="preset-editor-field preset-name-field">
+                <span>Название пресета</span>
+
+                <input
+                    type="text"
+                    id="presetNameInput"
+                    placeholder="Например, Альфа-Банк"
+                >
+            </label>
+
+            <section class="preset-editor-section">
+                <h3>Заголовки</h3>
+
+                <p>Обнаруженные колонки в файле-источнике</p>
+
+                <div class="preset-headers-list" id="presetHeadersList">
+                    <span class="preset-header-chip">
+                        <img src="../img/mnogo_tochek.png" alt="">
+                        operationDate
+                    </span>
+
+                    <span class="preset-header-chip">
+                        <img src="../img/mnogo_tochek.png" alt="">
+                        currency
+                    </span>
+
+                    <span class="preset-header-chip">
+                        <img src="../img/mnogo_tochek.png" alt="">
+                        amount
+                    </span>
+
+                    <span class="preset-header-chip">
+                        <img src="../img/mnogo_tochek.png" alt="">
+                        description
+                    </span>
+
+                    <span class="preset-header-chip">
+                        <img src="../img/mnogo_tochek.png" alt="">
+                        category
+                    </span>
+
+                    <span class="preset-header-chip">
+                        <img src="../img/mnogo_tochek.png" alt="">
+                        type
+                    </span>
+                </div>
+            </section>
+
+            <section class="preset-editor-section preset-settings-section">
+                <h3>Настройки</h3>
+
+                <div class="preset-settings-grid">
+
+                    <label class="preset-editor-field">
+                        <span>Разделитель</span>
+
+                        <select id="presetDelimiter">
+                            <option value=";">;</option>
+                            <option value=",">,</option>
+                            <option value="\t">Tab</option>
+                        </select>
+                    </label>
+
+                    <label class="preset-editor-field">
+                        <span>Культура дат</span>
+
+                        <select id="presetDateCulture">
+                            <option value="ru-RU">ru-RU</option>
+                            <option value="en-US">en-US</option>
+                            <option value="Invariant">Invariant</option>
+                        </select>
+                    </label>
+
+                    <label class="preset-editor-field">
+                        <span>Формат даты</span>
+
+                        <select id="presetDateFormat">
+                            <option value="">Автоматически</option>
+                            <option value="dd.MM.yyyy">dd.MM.yyyy</option>
+                            <option value="yyyy-MM-dd">yyyy-MM-dd</option>
+                            <option value="MM/dd/yyyy">MM/dd/yyyy</option>
+                        </select>
+                    </label>
+
+                    <label class="preset-editor-field">
+                        <span>Культура чисел</span>
+
+                        <select id="presetNumberCulture">
+                            <option value="ru-RU">ru-RU</option>
+                            <option value="Invariant">Invariant</option>
+                            <option value="en-US">en-US</option>
+                        </select>
+                    </label>
+
+                </div>
+            </section>
+
+            <section class="preset-editor-section">
+                <h3>Маппинг</h3>
+
+                <div class="mapping-table">
+
+                    <div class="mapping-row mapping-head">
+                        <span>Поле системы</span>
+                        <span>Колонка источника</span>
+                    </div>
+
+                    <div class="mapping-row">
+                        <span>Дата</span>
+                        <select id="presetMapDate"></select>
+                    </div>
+
+                    <div class="mapping-row">
+                        <span>Сумма</span>
+                        <select id="presetMapAmount"></select>
+                    </div>
+
+                    <div class="mapping-row">
+                        <span>Валюта</span>
+                        <select id="presetMapCurrency"></select>
+                    </div>
+
+                    <div class="mapping-row">
+                        <span>Описание</span>
+                        <select id="presetMapDescription"></select>
+                    </div>
+
+                    <div class="mapping-row">
+                        <span>Категория</span>
+                        <select id="presetMapCategory"></select>
+                    </div>
+
+                    <div class="mapping-row">
+                        <span>Тип</span>
+                        <select id="presetMapType"></select>
+                    </div>
+
+                </div>
+            </section>
+
+            <p class="preset-editor-error" id="presetEditorError" hidden></p>
+
+        </div>
+
+        <div class="preset-editor-actions">
+
+            <button
+                type="button"
+                class="preset-editor-cancel"
+                id="presetEditorCancel"
+            >
+                Отмена
+            </button>
+
+            <button
+                type="button"
+                class="preset-editor-save"
+                id="presetEditorSave"
+            >
+                Сохранить
+            </button>
+
+        </div>
+
+    </div>
+</div>
 
 <div class="upload-modal-overlay" id="uploadMessageModal" hidden>
     <div class="upload-modal">

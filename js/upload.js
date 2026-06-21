@@ -109,11 +109,110 @@ const uploadMessageClose =
 const uploadMessageOk =
     document.querySelector("#uploadMessageOk");
 
+const presetSelect =
+    document.querySelector("#presetSelect");
+
+const presetQuickEditBtn =
+    document.querySelector("#presetQuickEditBtn");
+
+const presetSettingsBtn =
+    document.querySelector("#presetSettingsBtn");
+
+const presetsModal =
+    document.querySelector("#presetsModal");
+
+const presetsModalClose =
+    document.querySelector("#presetsModalClose");
+
+const presetsCancelBtn =
+    document.querySelector("#presetsCancelBtn");
+
+const presetsChooseBtn =
+    document.querySelector("#presetsChooseBtn");
+
+const presetsList =
+    document.querySelector("#presetsList");
+
+const addPresetBtn =
+    document.querySelector("#addPresetBtn");
+
+const presetEditorModal =
+    document.querySelector("#presetEditorModal");
+
+const presetEditorTitle =
+    document.querySelector("#presetEditorTitle");
+
+const presetEditorClose =
+    document.querySelector("#presetEditorClose");
+
+const presetEditorCancel =
+    document.querySelector("#presetEditorCancel");
+
+const presetEditorSave =
+    document.querySelector("#presetEditorSave");
+
+const presetNameInput =
+    document.querySelector("#presetNameInput");
+
+const presetHeadersList =
+    document.querySelector("#presetHeadersList");
+
+const presetDelimiter =
+    document.querySelector("#presetDelimiter");
+
+const presetDateCulture =
+    document.querySelector("#presetDateCulture");
+
+const presetDateFormat =
+    document.querySelector("#presetDateFormat");
+
+const presetNumberCulture =
+    document.querySelector("#presetNumberCulture");
+
+const presetMapDate =
+    document.querySelector("#presetMapDate");
+
+const presetMapAmount =
+    document.querySelector("#presetMapAmount");
+
+const presetMapCurrency =
+    document.querySelector("#presetMapCurrency");
+
+const presetMapDescription =
+    document.querySelector("#presetMapDescription");
+
+const presetMapCategory =
+    document.querySelector("#presetMapCategory");
+
+const presetMapType =
+    document.querySelector("#presetMapType");
+
+const presetEditorError =
+    document.querySelector("#presetEditorError");
+
 let manualKind = "expense";
 
 let categories = [];
 let scopes = [];
 let tags = [];
+
+let importPresets = [];
+let selectedPresetId = "";
+let selectedFiles = [];
+let previewIsReady = false;
+let previewIsLoading = false;
+let previewHeaders = [
+    "operationDate",
+    "currency",
+    "amount",
+    "description",
+    "category",
+    "type"
+];
+
+let currentEditingPresetId = null;
+let editorHeaders = [];
+let uploadMessageResolver = null;
 
 /*
     =========================
@@ -124,7 +223,13 @@ let tags = [];
 document.addEventListener("DOMContentLoaded", async () => {
     setDefaultManualDate();
     bindEvents();
-    await loadReferences();
+
+    await Promise.all([
+        loadReferences(),
+        loadImportPresets()
+    ]);
+
+    renderEmptyImportState();
 });
 
 /*
@@ -171,9 +276,7 @@ function bindEvents() {
     }
 
     if (cancelButton) {
-        cancelButton.addEventListener("click", () => {
-            window.location.href = "../index.html";
-        });
+        cancelButton.addEventListener("click", resetImportState);
     }
 
     switchButtons.forEach(button => {
@@ -217,7 +320,7 @@ function bindEvents() {
                 return;
             }
 
-            await uploadFiles(files);
+            await handleSelectedFiles(files);
         });
     }
 
@@ -229,25 +332,13 @@ function bindEvents() {
             return;
         }
 
-        await uploadFiles(files);
+        await handleSelectedFiles(files);
 
         fileInput.value = "";
     });
 
     if (importButton) {
-        importButton.addEventListener("click", async () => {
-            const imported =
-                localStorage.getItem("transactionsImported");
-
-            if (imported === "true") {
-                window.location.href = "transactions.html";
-            } else {
-                await showMessage(
-                    "Файл не загружен",
-                    "Сначала загрузите CSV-файл или создайте транзакцию вручную."
-                );
-            }
-        });
+        importButton.addEventListener("click", importSelectedFiles);
     }
 
     if (manualForm) {
@@ -266,6 +357,78 @@ function bindEvents() {
             closeMessage();
         }
     });
+
+    if (presetSelect) {
+        presetSelect.addEventListener("change", () => {
+            selectedPresetId = presetSelect.value;
+            renderPresetsList();
+        });
+    }
+
+    if (presetSettingsBtn) {
+        presetSettingsBtn.addEventListener("click", openPresetsModal);
+    }
+
+    if (presetQuickEditBtn) {
+        presetQuickEditBtn.addEventListener("click", () => {
+            if (!selectedPresetId) {
+                showMessage(
+                    "Пресет не выбран",
+                    "Сначала выберите пресет для редактирования."
+                );
+
+                return;
+            }
+
+            openPresetEditor(selectedPresetId);
+        });
+    }
+
+    if (presetsModalClose) {
+        presetsModalClose.addEventListener("click", closePresetsModal);
+    }
+
+    if (presetsCancelBtn) {
+        presetsCancelBtn.addEventListener("click", closePresetsModal);
+    }
+
+    if (presetsChooseBtn) {
+        presetsChooseBtn.addEventListener("click", choosePresetFromModal);
+    }
+
+    if (presetsModal) {
+        presetsModal.addEventListener("click", event => {
+            if (event.target === presetsModal) {
+                closePresetsModal();
+            }
+        });
+    }
+
+    if (addPresetBtn) {
+        addPresetBtn.addEventListener("click", () => {
+            openPresetEditor(null);
+        });
+    }
+
+    if (presetEditorClose) {
+        presetEditorClose.addEventListener("click", closePresetEditor);
+    }
+
+    if (presetEditorCancel) {
+        presetEditorCancel.addEventListener("click", closePresetEditor);
+    }
+
+    if (presetEditorModal) {
+        presetEditorModal.addEventListener("click", event => {
+            if (event.target === presetEditorModal) {
+                closePresetEditor();
+            }
+        });
+    }
+
+    if (presetEditorSave) {
+        presetEditorSave.addEventListener("click", savePresetFromEditor);
+    }
 }
 
 /*
@@ -381,6 +544,576 @@ async function loadReferences() {
     }
 }
 
+async function loadImportPresets() {
+    if (!presetSelect) {
+        return;
+    }
+
+    try {
+        importPresets =
+            await apiRequest("/import/presets") || [];
+
+        if (!selectedPresetId && importPresets.length > 0) {
+            selectedPresetId =
+                importPresets[0].id;
+        }
+
+        renderPresetSelect();
+        renderPresetsList();
+
+    } catch (error) {
+        console.error(error);
+
+        presetSelect.innerHTML = `
+            <option value="">
+                Не удалось загрузить пресеты
+            </option>
+        `;
+    }
+}
+
+function renderPresetSelect() {
+    if (!presetSelect) {
+        return;
+    }
+
+    presetSelect.innerHTML = "";
+
+    if (importPresets.length === 0) {
+        const option =
+            document.createElement("option");
+
+        option.value = "";
+        option.textContent =
+            "Пресеты не найдены";
+
+        presetSelect.appendChild(option);
+        presetSelect.disabled = true;
+
+        return;
+    }
+
+    presetSelect.disabled = false;
+
+    const selectedExists =
+        importPresets.some(preset => preset.id === selectedPresetId);
+
+    if (!selectedExists) {
+        selectedPresetId =
+            importPresets[0].id;
+    }
+
+    importPresets.forEach(preset => {
+        const option =
+            document.createElement("option");
+
+        option.value =
+            preset.id;
+
+        option.textContent =
+            preset.name;
+
+        presetSelect.appendChild(option);
+    });
+
+    presetSelect.value =
+        selectedPresetId;
+}
+
+function openPresetsModal() {
+    renderPresetsList();
+
+    presetsModal.hidden =
+        false;
+}
+
+function closePresetsModal() {
+    presetsModal.hidden =
+        true;
+}
+
+function choosePresetFromModal() {
+    if (presetSelect) {
+        presetSelect.value =
+            selectedPresetId;
+    }
+
+    closePresetsModal();
+}
+
+function renderPresetsList() {
+    if (!presetsList) {
+        return;
+    }
+
+    presetsList.innerHTML = "";
+
+    if (importPresets.length === 0) {
+        presetsList.innerHTML = `
+            <div class="presets-empty">
+                Пресеты пока не созданы
+            </div>
+        `;
+
+        return;
+    }
+
+    importPresets.forEach(preset => {
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "preset-list-item";
+
+        if (preset.id === selectedPresetId) {
+            item.classList.add("active");
+        }
+
+        item.dataset.presetId =
+            preset.id;
+
+        item.innerHTML = `
+            <span class="preset-list-name">
+                ${escapeHtml(preset.name)}
+            </span>
+
+            <div class="preset-list-actions">
+                <button
+                    type="button"
+                    class="preset-icon-btn"
+                    data-preset-action="edit"
+                    aria-label="Редактировать пресет"
+                >
+                    <img src="../img/change_category.png" alt="">
+                </button>
+
+                <button
+                    type="button"
+                    class="preset-icon-btn"
+                    data-preset-action="delete"
+                    aria-label="Удалить пресет"
+                >
+                    <img src="../img/delete.png" alt="">
+                </button>
+            </div>
+        `;
+
+        item.addEventListener("click", event => {
+            const actionButton =
+                event.target.closest("[data-preset-action]");
+
+            if (actionButton) {
+                return;
+            }
+
+            selectedPresetId =
+                preset.id;
+
+            renderPresetsList();
+        });
+
+        item
+            .querySelector('[data-preset-action="edit"]')
+            .addEventListener("click", () => {
+                openPresetEditor(preset.id);
+            });
+
+        item
+            .querySelector('[data-preset-action="delete"]')
+            .addEventListener("click", async () => {
+                await deletePreset(preset.id);
+            });
+
+        presetsList.appendChild(item);
+    });
+}
+
+async function openPresetEditor(presetId) {
+    currentEditingPresetId =
+        presetId;
+
+    hidePresetEditorError();
+
+    if (presetId) {
+        presetEditorTitle.textContent =
+            "Изменить пресет";
+
+        try {
+            const preset =
+                await apiRequest(`/import/presets/${presetId}`);
+
+            fillPresetEditor(preset);
+
+        } catch (error) {
+            console.error(error);
+
+            await showMessage(
+                "Ошибка",
+                "Не удалось загрузить пресет"
+            );
+        }
+
+    } else {
+        presetEditorTitle.textContent =
+            "Новый пресет";
+
+        fillPresetEditor({
+            name: "",
+            matchHeaders: previewHeaders,
+            parseOptions: null
+        });
+    }
+
+    presetEditorModal.hidden =
+        false;
+}
+
+function closePresetEditor() {
+    presetEditorModal.hidden =
+        true;
+
+    currentEditingPresetId =
+        null;
+
+    hidePresetEditorError();
+}
+
+function fillPresetEditor(preset) {
+    const parseOptions =
+        preset.parseOptions || {};
+
+    const columnMapping =
+        parseOptions.columnMapping || {};
+
+    editorHeaders =
+        preset.matchHeaders?.length > 0
+            ? preset.matchHeaders
+            : previewHeaders;
+
+    presetNameInput.value =
+        preset.name || "";
+
+    presetDelimiter.value =
+        parseOptions.delimiter || ";";
+
+    presetDateCulture.value =
+        parseOptions.culture || "ru-RU";
+
+    presetDateFormat.value =
+        parseOptions.dateFormat || "";
+
+    presetNumberCulture.value =
+        parseOptions.numberCulture || "ru-RU";
+
+    renderPresetHeaders();
+    renderMappingSelects(columnMapping);
+}
+
+function renderPresetHeaders() {
+    presetHeadersList.innerHTML = "";
+
+    editorHeaders.forEach(header => {
+        presetHeadersList.innerHTML += `
+            <span class="preset-header-chip">
+                <img src="../img/mnogo_tochek.png" alt="">
+                ${escapeHtml(header)}
+            </span>
+        `;
+    });
+}
+
+function renderMappingSelects(columnMapping = {}) {
+    renderColumnSelect(
+        presetMapDate,
+        getColumnName(columnMapping.date),
+        false
+    );
+
+    renderColumnSelect(
+        presetMapAmount,
+        getColumnName(columnMapping.amount),
+        false
+    );
+
+    renderColumnSelect(
+        presetMapCurrency,
+        getColumnName(columnMapping.currency),
+        false
+    );
+
+    renderColumnSelect(
+        presetMapDescription,
+        getColumnName(columnMapping.description),
+        true
+    );
+
+    renderColumnSelect(
+        presetMapCategory,
+        getColumnName(columnMapping.categoryName),
+        false
+    );
+
+    renderColumnSelect(
+        presetMapType,
+        getColumnName(columnMapping.type?.column),
+        true
+    );
+}
+
+function renderColumnSelect(select, selectedValue, allowEmpty) {
+    select.innerHTML = "";
+
+    if (allowEmpty) {
+        const emptyOption =
+            document.createElement("option");
+
+        emptyOption.value = "";
+        emptyOption.textContent =
+            "Не выбрано";
+
+        select.appendChild(emptyOption);
+    }
+
+    editorHeaders.forEach(header => {
+        const option =
+            document.createElement("option");
+
+        option.value =
+            header;
+
+        option.textContent =
+            header;
+
+        select.appendChild(option);
+    });
+
+    if (selectedValue) {
+        select.value =
+            selectedValue;
+    }
+}
+
+function getColumnName(mapping) {
+    if (!mapping) {
+        return "";
+    }
+
+    if (mapping.columnName) {
+        return mapping.columnName;
+    }
+
+    if (
+        typeof mapping.columnIndex === "number" &&
+        editorHeaders[mapping.columnIndex]
+    ) {
+        return editorHeaders[mapping.columnIndex];
+    }
+
+    return "";
+}
+
+async function savePresetFromEditor() {
+    hidePresetEditorError();
+
+    const name =
+        presetNameInput.value.trim();
+
+    if (!name) {
+        showPresetEditorError(
+            "Укажите название пресета"
+        );
+
+        return;
+    }
+
+    if (
+        !presetMapDate.value ||
+        !presetMapAmount.value ||
+        !presetMapCurrency.value ||
+        !presetMapCategory.value
+    ) {
+        showPresetEditorError(
+            "Заполните обязательные поля маппинга"
+        );
+
+        return;
+    }
+
+    const payload =
+        buildPresetPayload(name);
+
+    presetEditorSave.disabled =
+        true;
+
+    presetEditorSave.textContent =
+        "Сохранение...";
+
+    try {
+        if (currentEditingPresetId) {
+            await apiRequest(
+                `/import/presets/${currentEditingPresetId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                }
+            );
+        } else {
+            await apiRequest(
+                "/import/presets",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                }
+            );
+        }
+
+        closePresetEditor();
+
+        await loadImportPresets();
+
+    } catch (error) {
+        console.error(error);
+
+        showPresetEditorError(
+            error.message || "Не удалось сохранить пресет"
+        );
+
+    } finally {
+        presetEditorSave.disabled =
+            false;
+
+        presetEditorSave.textContent =
+            "Сохранить";
+    }
+}
+
+function buildPresetPayload(name) {
+    const delimiter =
+        presetDelimiter.value === "\\t"
+            ? "\t"
+            : presetDelimiter.value;
+
+    const columnMapping = {
+        date:
+            buildColumnRef(presetMapDate.value),
+        amount:
+            buildColumnRef(presetMapAmount.value),
+        currency:
+            buildColumnRef(presetMapCurrency.value),
+        categoryName:
+            buildColumnRef(presetMapCategory.value)
+    };
+
+    if (presetMapDescription.value) {
+        columnMapping.description =
+            buildColumnRef(presetMapDescription.value);
+    }
+
+    if (presetMapType.value) {
+        columnMapping.type = {
+            column:
+                buildColumnRef(presetMapType.value),
+            incomeValues: [
+                "income",
+                "приход",
+                "credit",
+                "зачисление",
+                "пополнение",
+                "доход"
+            ],
+            expenseValues: [
+                "expense",
+                "расход",
+                "debit",
+                "списание"
+            ]
+        };
+    }
+
+    return {
+        name,
+        matchHeaders:
+            editorHeaders,
+        parseOptions: {
+            delimiter,
+            culture:
+                presetDateCulture.value,
+            dateFormat:
+                presetDateFormat.value || null,
+            numberCulture:
+                presetNumberCulture.value || null,
+            hasHeaderRecord:
+                true,
+            columnMapping
+        }
+    };
+}
+
+function buildColumnRef(columnName) {
+    return {
+        columnName
+    };
+}
+
+async function deletePreset(presetId) {
+    const preset =
+        importPresets.find(item => item.id === presetId);
+
+    const confirmed =
+        window.confirm(
+            `Удалить пресет «${preset?.name || "без названия"}»?`
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        await apiRequest(
+            `/import/presets/${presetId}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        if (selectedPresetId === presetId) {
+            selectedPresetId = "";
+        }
+
+        await loadImportPresets();
+
+    } catch (error) {
+        console.error(error);
+
+        await showMessage(
+            "Ошибка",
+            error.message || "Не удалось удалить пресет"
+        );
+    }
+}
+
+function showPresetEditorError(message) {
+    presetEditorError.textContent =
+        message;
+
+    presetEditorError.hidden =
+        false;
+}
+
+function hidePresetEditorError() {
+    presetEditorError.textContent =
+        "";
+
+    presetEditorError.hidden =
+        true;
+}
+
 function renderManualReferences() {
     renderManualCategories();
     renderManualScopes();
@@ -488,14 +1221,151 @@ function renderManualTags() {
     =========================
 */
 
-async function uploadFiles(files) {
+async function handleSelectedFiles(files) {
+    selectedFiles =
+        Array.from(files);
+
+    previewIsReady =
+        false;
+
+    if (selectedFiles.length === 0) {
+        renderEmptyImportState();
+        return;
+    }
+
+    renderFileSelectedState(selectedFiles[0]);
+}
+
+async function previewImportFile(file) {
+    if (previewIsLoading) {
+        return;
+    }
+
+    previewIsLoading =
+        true;
+
+    importButton.disabled =
+        true;
+
+    importButton.textContent =
+        "Предпросмотр...";
+
     const formData =
         new FormData();
 
-    for (const file of files) {
-        console.log(file);
-        formData.append("files", file);
+    formData.append("file", file);
+
+    try {
+        const response =
+            await fetch(
+                `${API_URL}/import/preview`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        const responseData =
+            await response.json();
+
+        if (!response.ok || responseData.success === false) {
+            throw new Error(
+                responseData.error ||
+                responseData.title ||
+                "Не удалось выполнить предпросмотр"
+            );
+        }
+
+        const preview =
+            responseData.data || responseData;
+
+        if (preview.headers?.length > 0) {
+            previewHeaders =
+                preview.headers;
+        }
+
+        if (Array.isArray(preview.presets)) {
+            importPresets =
+                preview.presets;
+
+            renderPresetSelect();
+        }
+
+        if (preview.matchedPresetId) {
+            selectedPresetId =
+                preview.matchedPresetId;
+
+            if (presetSelect) {
+                presetSelect.value =
+                    selectedPresetId;
+            }
+        }
+
+        previewIsReady =
+            true;
+
+        renderPreviewState(file, preview);
+        renderPresetsList();
+
+    } catch (error) {
+        console.error(error);
+
+        previewIsReady =
+            false;
+
+        await showMessage(
+            "Ошибка предпросмотра",
+            error.message || "Не удалось прочитать CSV-файл"
+        );
+
+    } finally {
+        previewIsLoading =
+            false;
+
+        importButton.disabled =
+            false;
+
+        importButton.textContent =
+            "Импортировать";
     }
+}
+
+async function importSelectedFiles() {
+    if (selectedFiles.length === 0) {
+        await showMessage(
+            "Файл не выбран",
+            "Сначала выберите CSV-файл для импорта."
+        );
+
+        return;
+    }
+
+    if (!previewIsReady) {
+        await previewImportFile(selectedFiles[0]);
+        return;
+    }
+
+    if (!selectedPresetId) {
+        await showMessage(
+            "Пресет не выбран",
+            "Сначала выберите пресет для импорта."
+        );
+
+        return;
+    }
+
+    const formData =
+        new FormData();
+
+    selectedFiles.forEach(file => {
+        formData.append("files", file);
+    });
+
+    formData.append("presetId", selectedPresetId);
+
+    importButton.disabled = true;
+    importButton.textContent =
+        "Импорт...";
 
     try {
         const response =
@@ -515,28 +1385,25 @@ async function uploadFiles(files) {
             responseData
         );
 
-        if (!responseData.success) {
-            await showMessage(
-                "Ошибка импорта",
-                responseData.error || "Не удалось импортировать файл"
+        if (!response.ok || responseData.success === false) {
+            throw new Error(
+                responseData.error ||
+                responseData.title ||
+                "Не удалось импортировать файл"
             );
-
-            return;
         }
 
         const imports =
-            responseData.data;
+            responseData.data || [];
 
         const importResult =
             imports[imports.length - 1];
 
-        if (!importResult.success) {
-            await showMessage(
-                "Ошибка импорта",
-                importResult.error || "Не удалось импортировать файл"
+        if (!importResult || !importResult.success) {
+            throw new Error(
+                importResult?.error ||
+                "Не удалось импортировать файл"
             );
-
-            return;
         }
 
         const result =
@@ -549,14 +1416,113 @@ async function uploadFiles(files) {
 
         renderImportResult(result);
 
+        await showMessage(
+            "Импорт завершён",
+            "Транзакции успешно загружены."
+        );
+
     } catch (error) {
         console.error(error);
 
         await showMessage(
-            "Ошибка загрузки",
-            "Не удалось загрузить файл"
+            "Ошибка импорта",
+            error.message || "Не удалось импортировать файл"
         );
+
+    } finally {
+        importButton.disabled = false;
+        importButton.textContent =
+            "Импортировать";
     }
+}
+
+function renderEmptyImportState() {
+    transactionsCount.textContent = "—";
+    incomeCount.textContent = "—";
+    expenseCount.textContent = "—";
+    periodText.innerHTML = "Файл<br>не выбран";
+
+    categoryTags.innerHTML = `
+        <div class="tag gray-tag">
+            Выберите CSV-файл
+        </div>
+    `;
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="4">
+                Данные появятся после выбора файла
+            </td>
+        </tr>
+    `;
+}
+
+function renderFileSelectedState(file) {
+    transactionsCount.textContent = "—";
+    incomeCount.textContent = "—";
+    expenseCount.textContent = "—";
+
+    periodText.innerHTML =
+        "Файл<br>выбран";
+
+    categoryTags.innerHTML = `
+        <div class="tag blue-tag">
+            ${escapeHtml(file.name)}
+        </div>
+    `;
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="4">
+                ${escapeHtml(file.name)} выбран. Нажмите «Импортировать», чтобы выполнить предпросмотр.
+            </td>
+        </tr>
+    `;
+}
+
+function renderPreviewState(file, preview) {
+    transactionsCount.textContent = "—";
+    incomeCount.textContent = "—";
+    expenseCount.textContent = "—";
+
+    periodText.innerHTML =
+        "Файл<br>готов";
+
+    categoryTags.innerHTML = "";
+
+    const headers =
+        preview.headers || [];
+
+    if (headers.length === 0) {
+        categoryTags.innerHTML = `
+            <div class="tag gray-tag">
+                Заголовки не найдены
+            </div>
+        `;
+    } else {
+        headers.slice(0, 6).forEach(header => {
+            categoryTags.innerHTML += `
+                <div class="tag blue-tag">
+                    ${escapeHtml(header)}
+                </div>
+            `;
+        });
+    }
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="4">
+                ${escapeHtml(file.name)} готов к импорту.
+                Нажмите «Импортировать».
+            </td>
+        </tr>
+    `;
+}
+
+function resetImportState() {
+    selectedFiles = [];
+    previewIsReady = false;
+    renderEmptyImportState();
 }
 
 function renderImportResult(result) {
@@ -881,38 +1847,19 @@ function showMessage(title, message) {
         false;
 
     return new Promise(resolve => {
-        const close = () => {
-            uploadMessageModal.hidden =
-                true;
-
-            uploadMessageOk.removeEventListener(
-                "click",
-                close
-            );
-
-            uploadMessageClose.removeEventListener(
-                "click",
-                close
-            );
-
-            resolve();
-        };
-
-        uploadMessageOk.addEventListener(
-            "click",
-            close
-        );
-
-        uploadMessageClose.addEventListener(
-            "click",
-            close
-        );
+        uploadMessageResolver =
+            resolve;
     });
 }
 
 function closeMessage() {
     uploadMessageModal.hidden =
         true;
+
+    if (uploadMessageResolver) {
+        uploadMessageResolver();
+        uploadMessageResolver = null;
+    }
 }
 
 /*

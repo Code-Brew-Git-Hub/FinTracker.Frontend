@@ -215,7 +215,7 @@ async function loadTransactions() {
             "/transactions?Page=1&PageSize=200"
         );
 
-        transactions = data || [];
+        transactions = normalizeTransactionsResponse(data);
 
         transactions.sort((a, b) => {
             return new Date(b.dateUtc) - new Date(a.dateUtc);
@@ -238,9 +238,45 @@ async function loadTransactions() {
 
         await showMessage({
             title: "Ошибка",
-            message: "Не удалось загрузить транзакции"
+            message: error.message || "Не удалось загрузить транзакции"
         });
     }
+}
+
+function normalizeTransactionsResponse(data) {
+    if (!data) {
+        return [];
+    }
+
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    if (Array.isArray(data.items)) {
+        return data.items;
+    }
+
+    if (Array.isArray(data.transactions)) {
+        return data.transactions;
+    }
+
+    if (Array.isArray(data.records)) {
+        return data.records;
+    }
+
+    if (Array.isArray(data.results)) {
+        return data.results;
+    }
+
+    if (Array.isArray(data.data)) {
+        return data.data;
+    }
+
+    if (data.data && Array.isArray(data.data.items)) {
+        return data.data.items;
+    }
+
+    throw new Error("Неожиданный формат ответа транзакций");
 }
 
 function setDefaultLastLoadedMonthPeriod() {
@@ -2443,16 +2479,6 @@ async function deleteTransactions() {
 async function bulkUpdateTransactions(dto) {
     await apiRequest("/transactions/bulk", {
         method: "PATCH",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(dto)
-    });
-}
-
-async function updateTransaction(id, dto) {
-    return apiRequest(`/transactions/${id}`, {
-        method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
