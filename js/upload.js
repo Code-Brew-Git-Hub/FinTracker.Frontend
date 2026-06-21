@@ -198,6 +198,7 @@ let tags = [];
 
 let importPresets = [];
 let selectedPresetId = "";
+let presetRecognitionMessage = "";
 let selectedFiles = [];
 let previewIsReady = false;
 let previewIsLoading = false;
@@ -566,7 +567,7 @@ async function loadImportPresets() {
 
         presetSelect.innerHTML = `
             <option value="">
-                Не удалось загрузить пресеты
+                Ошибка пресетов
             </option>
         `;
     }
@@ -598,7 +599,16 @@ function renderPresetSelect() {
     const selectedExists =
         importPresets.some(preset => preset.id === selectedPresetId);
 
-    if (!selectedExists) {
+    if (!selectedPresetId && presetRecognitionMessage) {
+        const option =
+            document.createElement("option");
+
+        option.value = "";
+        option.textContent =
+            presetRecognitionMessage;
+
+        presetSelect.appendChild(option);
+    } else if (!selectedExists) {
         selectedPresetId =
             importPresets[0].id;
     }
@@ -1228,12 +1238,15 @@ async function handleSelectedFiles(files) {
     previewIsReady =
         false;
 
+    presetRecognitionMessage =
+        "";
+
     if (selectedFiles.length === 0) {
         renderEmptyImportState();
         return;
     }
 
-    renderFileSelectedState(selectedFiles[0]);
+    await previewImportFile(selectedFiles[0]);
 }
 
 async function previewImportFile(file) {
@@ -1295,10 +1308,21 @@ async function previewImportFile(file) {
             selectedPresetId =
                 preview.matchedPresetId;
 
+            presetRecognitionMessage =
+                "";
+
             if (presetSelect) {
                 presetSelect.value =
                     selectedPresetId;
             }
+        } else {
+            selectedPresetId =
+                "";
+
+            presetRecognitionMessage =
+                "Пресет не распознан";
+
+            renderPresetSelect();
         }
 
         previewIsReady =
@@ -1341,7 +1365,11 @@ async function importSelectedFiles() {
     }
 
     if (!previewIsReady) {
-        await previewImportFile(selectedFiles[0]);
+        await showMessage(
+            "Предпросмотр не готов",
+            "Дождитесь завершения проверки файла."
+        );
+
         return;
     }
 
@@ -1416,6 +1444,12 @@ async function importSelectedFiles() {
 
         renderImportResult(result);
 
+        selectedFiles =
+            [];
+
+        previewIsReady =
+            false;
+
         await showMessage(
             "Импорт завершён",
             "Транзакции успешно загружены."
@@ -1440,45 +1474,23 @@ function renderEmptyImportState() {
     transactionsCount.textContent = "—";
     incomeCount.textContent = "—";
     expenseCount.textContent = "—";
-    periodText.innerHTML = "Файл<br>не выбран";
+    periodText.innerHTML = "—";
 
     categoryTags.innerHTML = `
         <div class="tag gray-tag">
-            Выберите CSV-файл
+            —
         </div>
     `;
 
     tableBody.innerHTML = `
         <tr>
             <td colspan="4">
-                Данные появятся после выбора файла
+                —
             </td>
         </tr>
     `;
 }
 
-function renderFileSelectedState(file) {
-    transactionsCount.textContent = "—";
-    incomeCount.textContent = "—";
-    expenseCount.textContent = "—";
-
-    periodText.innerHTML =
-        "Файл<br>выбран";
-
-    categoryTags.innerHTML = `
-        <div class="tag blue-tag">
-            ${escapeHtml(file.name)}
-        </div>
-    `;
-
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="4">
-                ${escapeHtml(file.name)} выбран. Нажмите «Импортировать», чтобы выполнить предпросмотр.
-            </td>
-        </tr>
-    `;
-}
 
 function renderPreviewState(file, preview) {
     transactionsCount.textContent = "—";
@@ -1486,34 +1498,18 @@ function renderPreviewState(file, preview) {
     expenseCount.textContent = "—";
 
     periodText.innerHTML =
-        "Файл<br>готов";
+        "—";
 
-    categoryTags.innerHTML = "";
-
-    const headers =
-        preview.headers || [];
-
-    if (headers.length === 0) {
-        categoryTags.innerHTML = `
-            <div class="tag gray-tag">
-                Заголовки не найдены
-            </div>
-        `;
-    } else {
-        headers.slice(0, 6).forEach(header => {
-            categoryTags.innerHTML += `
-                <div class="tag blue-tag">
-                    ${escapeHtml(header)}
-                </div>
-            `;
-        });
-    }
+    categoryTags.innerHTML = `
+        <div class="tag gray-tag">
+            —
+        </div>
+    `;
 
     tableBody.innerHTML = `
         <tr>
             <td colspan="4">
-                ${escapeHtml(file.name)} готов к импорту.
-                Нажмите «Импортировать».
+                —
             </td>
         </tr>
     `;
@@ -1522,6 +1518,8 @@ function renderPreviewState(file, preview) {
 function resetImportState() {
     selectedFiles = [];
     previewIsReady = false;
+    presetRecognitionMessage = "";
+    renderPresetSelect();
     renderEmptyImportState();
 }
 
