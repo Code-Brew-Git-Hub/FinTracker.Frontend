@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5009/api";
+const API_BASE_URL = "/api";
 
 let analyticsState = {
     categories: [],

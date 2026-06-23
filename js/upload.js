@@ -1,5 +1,5 @@
 const API_URL =
-    "http://localhost:5009/api";
+    "/api";
 
 const navLinks =
     document.querySelectorAll(".nav a");
